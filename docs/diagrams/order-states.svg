@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 430" width="960" height="430" font-family="Helvetica, Arial, sans-serif" font-size="11" fill="#14201b">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#3c4a44"/></marker>
+    <marker id="r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b42318"/></marker>
+  </defs>
+  <style>
+    .n { font-size: 12px; font-weight: 700; }
+    .e { stroke: #3c4a44; stroke-width: 1.5; fill: none; }
+    .bg { fill: #ffffff; }
+  </style>
+  <rect width="960" height="430" fill="#fff"/>
+
+  <!-- side states -->
+  <rect x="20" y="40" width="170" height="46" rx="10" fill="#fff3dc" stroke="#8a5300"/>
+  <text class="n" x="105" y="68" text-anchor="middle">NEEDS_REUPLOAD</text>
+  <rect x="400" y="40" width="240" height="46" rx="10" fill="#fff3dc" stroke="#8a5300"/>
+  <text class="n" x="520" y="68" text-anchor="middle">AWAITING_CUSTOMER_CONSENT</text>
+
+  <!-- main row -->
+  <rect x="20" y="236" width="170" height="46" rx="10" fill="#e8f0fb" stroke="#1d4f91"/>
+  <text class="n" x="105" y="264" text-anchor="middle">AWAITING_PHARMACIST</text>
+  <rect x="260" y="236" width="120" height="46" rx="10" fill="#e5f3ea" stroke="#166a3a"/>
+  <text class="n" x="320" y="264" text-anchor="middle">APPROVED</text>
+  <rect x="430" y="236" width="100" height="46" rx="10" fill="#e2f1ec" stroke="#0f6b5c"/>
+  <text class="n" x="480" y="264" text-anchor="middle">PICKING</text>
+  <rect x="580" y="236" width="100" height="46" rx="10" fill="#e2f1ec" stroke="#0f6b5c"/>
+  <text class="n" x="630" y="264" text-anchor="middle">PACKED</text>
+  <rect x="730" y="236" width="110" height="46" rx="10" fill="#e2f1ec" stroke="#0f6b5c"/>
+  <text class="n" x="785" y="256" text-anchor="middle">HANDED_TO_</text>
+  <text class="n" x="785" y="272" text-anchor="middle">DELIVERY</text>
+  <rect x="856" y="236" width="94" height="46" rx="10" fill="#e5f3ea" stroke="#166a3a"/>
+  <text class="n" x="903" y="264" text-anchor="middle">DELIVERED</text>
+
+  <!-- terminal -->
+  <rect x="20" y="360" width="120" height="46" rx="10" fill="#fdeceb" stroke="#b42318"/>
+  <text class="n" x="80" y="388" text-anchor="middle">REJECTED</text>
+  <rect x="260" y="360" width="120" height="46" rx="10" fill="#f5f7f6" stroke="#5f6e67"/>
+  <text class="n" x="320" y="388" text-anchor="middle">CANCELLED</text>
+
+  <!-- happy path -->
+  <line class="e" x1="190" y1="259" x2="256" y2="259" marker-end="url(#a)"/>
+  <text x="225" y="302" text-anchor="middle">pharmacist approves</text>
+  <text x="225" y="316" text-anchor="middle">+ approval gate</text>
+  <line class="e" x1="380" y1="259" x2="426" y2="259" marker-end="url(#a)"/>
+  <line class="e" x1="530" y1="259" x2="576" y2="259" marker-end="url(#a)"/>
+  <line class="e" x1="680" y1="259" x2="726" y2="259" marker-end="url(#a)"/>
+  <line class="e" x1="840" y1="259" x2="852" y2="259" marker-end="url(#a)"/>
+  <rect x="420" y="296" width="430" height="40" rx="8" fill="#fff" stroke="#c3cec8" stroke-dasharray="4 3"/>
+  <text x="635" y="313" text-anchor="middle">store staff / ops · dispatch gate re-checked at every step</text>
+  <text x="635" y="328" text-anchor="middle">invoice no. at PACKED (stock consumed) · refill dates start at DELIVERED</text>
+
+  <!-- re-upload loop -->
+  <line class="e" x1="80" y1="232" x2="80" y2="90" marker-end="url(#a)"/>
+  <rect class="bg" x="28" y="122" width="104" height="30"/>
+  <text x="80" y="134" text-anchor="middle">pharmacist asks</text>
+  <text x="80" y="148" text-anchor="middle">(reason required)</text>
+  <line class="e" x1="150" y1="90" x2="150" y2="232" marker-end="url(#a)"/>
+  <rect class="bg" x="112" y="160" width="76" height="30"/>
+  <text x="150" y="172" text-anchor="middle">customer</text>
+  <text x="150" y="186" text-anchor="middle">re-uploads</text>
+
+  <!-- generic substitution -->
+  <line class="e" x1="190" y1="248" x2="420" y2="90" marker-end="url(#a)"/>
+  <rect class="bg" x="240" y="158" width="128" height="30"/>
+  <text x="304" y="170" text-anchor="middle">pharmacist proposes</text>
+  <text x="304" y="184" text-anchor="middle">a generic alternative</text>
+  <line class="e" x1="480" y1="90" x2="340" y2="232" marker-end="url(#a)"/>
+  <rect class="bg" x="388" y="124" width="100" height="30"/>
+  <text x="438" y="136" text-anchor="middle">customer consents</text>
+  <text x="438" y="150" text-anchor="middle">(consent recorded)</text>
+  <path class="e" d="M610 86 V 206 H 178 V 232" stroke-dasharray="5 4" marker-end="url(#a)"/>
+  <text x="618" y="140">customer declines →</text>
+  <text x="618" y="154">pharmacist decides again</text>
+  <text x="618" y="168">on the original medicine</text>
+
+  <!-- reject / cancel -->
+  <line x1="80" y1="282" x2="80" y2="356" stroke="#b42318" stroke-width="1.5" marker-end="url(#r)"/>
+  <text x="88" y="326">pharmacist (reason)</text>
+  <line class="e" x1="320" y1="282" x2="320" y2="356" stroke="#5f6e67" marker-end="url(#a)"/>
+  <text x="390" y="378">customer or ops — from awaiting / on-hold / consent / approved;</text>
+  <text x="390" y="393">releases reserved stock and voids the test payment</text>
+</svg>

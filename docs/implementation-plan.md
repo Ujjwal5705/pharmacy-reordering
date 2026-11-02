@@ -33,10 +33,15 @@ actor so access control is enforced and testable outside the UI.
 ## Checklist
 
 - [x] Phase 1 audit and plan
-- [ ] Phase 2 foundation: config, Docker DB, Prisma schema + migrations, seed, OTP auth, design tokens
-- [ ] Phase 3 domain: policy rules, state machine, dispatch gate, routing, refill maths + invariant tests
-- [ ] Phase 4 customer journey
-- [ ] Phase 5 pharmacist workflow
-- [ ] Phase 6 stock import, routing, store/ops views
-- [ ] Phase 7 polish, full test run, secret scan
-- [ ] Phase 8 TDD, deployment.md, submission ZIP, GitHub publish
+- [x] Phase 2 foundation: config, Docker DB, Prisma schema + migrations, seed, OTP auth, design tokens
+- [x] Phase 3 domain: policy rules, state machine, dispatch gate, routing, refill maths + invariant tests
+- [x] Phase 4 customer journey
+- [x] Phase 5 pharmacist workflow
+- [x] Phase 6 stock import, routing, store/ops views
+- [x] Phase 7 polish, full test run, secret scan
+- [x] Phase 8 TDD (`docs/TDD.md` → PDF), `deployment.md`, submission ZIP (`npm run submission:build`), GitHub publish
+
+## Outcome
+
+- Vitest: 152 passed (101 unit, 51 PostgreSQL integration). Playwright: 5 passed.
+- Verified from a fresh clone of the public repository (install, migrate, seed, build, browser journey, all suites).
