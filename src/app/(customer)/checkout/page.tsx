@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { requirePageRole } from "@/server/auth/session";
@@ -58,6 +59,7 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
           lastReview: p.reviews[0]?.outcome ?? null,
         }))}
         selectedRx={data.selectedRx ? { id: data.selectedRx.id, mimeType: data.selectedRx.mimeType } : null}
+        viewKey={randomUUID()}
         run={run ? JSON.parse(JSON.stringify(run)) : null}
         localities={data.localities.map((l) => ({ id: l.id, name: l.name, pincode: l.pincode }))}
         localityId={data.localityId}

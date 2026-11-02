@@ -9,6 +9,8 @@ export type StockRow = {
   storeCode: string;
   sku: string;
   quantity: number | null;
+  /** The cell as written in the file (shown to operations when it is invalid). */
+  rawQuantity: string | null;
   status: "VALID" | "ERROR" | "DUPLICATE";
   errorMessage: string | null;
 };
@@ -57,8 +59,9 @@ export function parseStockCsv(text: string, known: { storeCodes: Set<string>; sk
       if (quantity > MAX_QUANTITY) errors.push(`quantity_on_hand exceeds ${MAX_QUANTITY}`);
     }
 
+    const rawQuantity = rawQty === "" ? null : rawQty.slice(0, 40);
     if (errors.length) {
-      return { rowNumber, storeCode, sku, quantity, status: "ERROR", errorMessage: errors.join("; ") };
+      return { rowNumber, storeCode, sku, quantity, rawQuantity, status: "ERROR", errorMessage: errors.join("; ") };
     }
     const key = `${storeCode}::${sku}`;
     if (seen.has(key)) {
@@ -67,12 +70,13 @@ export function parseStockCsv(text: string, known: { storeCodes: Set<string>; sk
         storeCode,
         sku,
         quantity,
+        rawQuantity,
         status: "DUPLICATE",
         errorMessage: "duplicate store_code + sku; first row in the file is used",
       };
     }
     seen.add(key);
-    return { rowNumber, storeCode, sku, quantity, status: "VALID", errorMessage: null };
+    return { rowNumber, storeCode, sku, quantity, rawQuantity, status: "VALID", errorMessage: null };
   });
 
   return { headerErrors: [], rows };

@@ -40,3 +40,14 @@ export function initials(name: string) {
     .map((p) => p[0]!.toUpperCase())
     .join("");
 }
+
+/** Avoids "…, Salt Lake, Salt Lake" when the address line already names the area. */
+export function addressWithArea(address: string, area: string) {
+  return address.toLowerCase().includes(area.toLowerCase()) ? address : `${address}, ${area}`;
+}
+
+/** Ends free text (e.g. a pharmacist's reason) with punctuation before more text follows it. */
+export function withFullStop(text: string) {
+  const t = text.trim();
+  return /[.!?]$/.test(t) ? t : `${t}.`;
+}

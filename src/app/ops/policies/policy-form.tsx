@@ -64,7 +64,7 @@ export function PolicyForm() {
         {check("pharmacistApprovalRequired", "Pharmacist approval required")}
         {check("h1RegisterRequired", "H1 register required")}
       </div>
-      <Field label="Reason for this version" htmlFor="pol-desc" className="sm:col-span-3">
+      <Field label="Reason for this version" htmlFor="pol-desc" className="sm:col-span-3" hint={f.description.trim().length < 5 ? `At least 5 characters (${f.description.trim().length}/5) to save.` : "Kept in the version history."}>
         <Input id="pol-desc" value={f.description} maxLength={300} onChange={(e) => setF({ ...f, description: e.target.value })} placeholder="e.g. Updated after notification of final online pharmacy rules" />
       </Field>
       <div className="sm:col-span-3">

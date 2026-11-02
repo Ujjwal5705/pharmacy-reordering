@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import type { OrderStatus } from "@prisma/client";
@@ -11,10 +12,18 @@ import { requirePageRole } from "@/server/auth/session";
 import { isDomainError } from "@/server/errors";
 import { getOrderDetail } from "@/server/queries/customer";
 import { canTransition } from "@/server/domain/order-state";
-import { dateOnly, dateTime, money } from "@/lib/format";
+import { addressWithArea, dateOnly, dateTime, money, withFullStop } from "@/lib/format";
 import { getT } from "@/lib/i18n/server";
 
 export const metadata: Metadata = { title: "Order" };
+
+const PAYMENT_STATUS: Record<string, string> = {
+  TEST_PAID: "paid (test)",
+  TEST_REFUNDED: "refunded (test)",
+  COD_PENDING: "pay on delivery",
+  COD_COLLECTED: "collected on delivery",
+  VOID: "cancelled — nothing to pay",
+};
 
 const FLOW: OrderStatus[] = ["AWAITING_PHARMACIST", "APPROVED", "PICKING", "PACKED", "HANDED_TO_DELIVERY", "DELIVERED"];
 
@@ -43,6 +52,8 @@ export default async function OrderDetailPage({ params, searchParams }: { params
   const reached = new Set(order.events.map((e) => e.toStatus));
   const offFlow = ["REJECTED", "CANCELLED", "NEEDS_REUPLOAD", "AWAITING_CUSTOMER_CONSENT"].includes(order.status);
   const cancellable = canTransition(order.status, "CANCELLED", "CUSTOMER");
+  const closed = order.status === "CANCELLED" || order.status === "REJECTED";
+  const orderValue = order.items.reduce((s, i) => s + i.unitPricePaise * i.quantity, 0);
 
   return (
     <div className="space-y-5">
@@ -83,7 +94,7 @@ export default async function OrderDetailPage({ params, searchParams }: { params
 
       {order.status === "REJECTED" ? (
         <Alert tone="bad" title="The pharmacist could not approve this order">
-          {order.rejectionReason ?? latestReview?.reason ?? "See item notes below."} Any test payment has been reversed. Please speak to your doctor if you need a new prescription.
+          {withFullStop(order.rejectionReason ?? latestReview?.reason ?? "See item notes below")} Any test payment has been reversed. Please speak to your doctor if you need a new prescription.
         </Alert>
       ) : null}
 
@@ -135,7 +146,7 @@ export default async function OrderDetailPage({ params, searchParams }: { params
                         {i.status === "REJECTED" && note?.reason ? <p className="text-sm text-bad">Pharmacist’s note: {note.reason}</p> : null}
                       </div>
                       <div className="flex flex-col items-end gap-1">
-                        <ItemStatusBadge status={i.status} />
+                        {order.status === "CANCELLED" ? <Badge tone="neutral">Cancelled</Badge> : <ItemStatusBadge status={i.status} />}
                         <span className="tabular-nums text-muted">{money(i.unitPricePaise * (i.approvedQuantity ?? i.quantity))}</span>
                       </div>
                     </div>
@@ -144,9 +155,14 @@ export default async function OrderDetailPage({ params, searchParams }: { params
               })}
             </ul>
             <div className="flex justify-between border-t border-line px-5 py-3 text-lg">
-              <span className="font-semibold">Total</span>
-              <span className="font-bold tabular-nums">{money(order.subtotalPaise)}</span>
+              <span className="font-semibold">{closed ? "Amount payable" : "Total"}</span>
+              <span className="font-bold tabular-nums">{money(closed ? 0 : order.subtotalPaise)}</span>
             </div>
+            {closed ? (
+              <p className="px-5 pb-4 text-sm text-muted">
+                Order value was {money(orderValue)}. {order.payment?.method === "UPI_TEST" ? "The test UPI payment was refunded." : "Nothing is due on delivery."}
+              </p>
+            ) : null}
           </Card>
 
           {order.refillPlans.length ? (
@@ -214,8 +230,8 @@ export default async function OrderDetailPage({ params, searchParams }: { params
               <KeyValue
                 items={[
                   ["Store", order.store ? <span className="inline-flex items-center gap-1"><Store aria-hidden className="size-4" /> {order.store.name}</span> : "Not assigned yet"],
-                  ["Deliver to", `${order.deliveryAddress}, ${order.deliveryLocality.name}`],
-                  ["Payment", order.payment ? <span className="inline-flex flex-wrap items-center gap-1">{order.payment.method === "UPI_TEST" ? "UPI" : "Cash on delivery"} <Badge tone="warn">Test</Badge> {order.payment.status.replaceAll("_", " ").toLowerCase()}</span> : "—"],
+                  ["Deliver to", addressWithArea(order.deliveryAddress, order.deliveryLocality.name)],
+                  ["Payment", order.payment ? <span className="inline-flex flex-wrap items-center gap-1">{order.payment.method === "UPI_TEST" ? "UPI" : "Cash on delivery"} <Badge tone="warn">Test</Badge> {PAYMENT_STATUS[order.payment.status] ?? order.payment.status}</span> : "—"],
                   ["Placed", dateTime(order.createdAt)],
                   ...(order.storeInvoiceNumber ? ([["Store invoice", order.storeInvoiceNumber]] as [string, string][]) : []),
                 ]}
@@ -224,7 +240,7 @@ export default async function OrderDetailPage({ params, searchParams }: { params
                 <details className="rounded-xl border border-line p-3">
                   <summary className="cursor-pointer text-sm font-semibold">View the prescription on this order</summary>
                   <div className="mt-3">
-                    <PrescriptionPreview id={order.prescription.id} mimeType={order.prescription.mimeType} alt="Prescription on this order" />
+                    <PrescriptionPreview id={order.prescription.id} mimeType={order.prescription.mimeType} viewKey={randomUUID()} alt="Prescription on this order" />
                   </div>
                 </details>
               ) : null}

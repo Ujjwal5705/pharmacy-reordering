@@ -58,7 +58,9 @@ export default async function StockPage({ searchParams }: { searchParams: Promis
                       <td className="px-3 py-1.5 tabular-nums">{r.rowNumber}</td>
                       <td className="px-3 py-1.5">{r.storeCode || "—"}</td>
                       <td className="px-3 py-1.5">{r.sku || "—"}</td>
-                      <td className="px-3 py-1.5 text-right tabular-nums">{r.quantity ?? "—"}</td>
+                      <td className="px-3 py-1.5 text-right tabular-nums">
+                        {r.quantity ?? (r.rawQuantity ? <span className="text-bad">“{r.rawQuantity}”</span> : <span className="text-muted">(blank)</span>)}
+                      </td>
                       <td className="px-3 py-1.5">
                         {r.status === "VALID" ? <Badge tone="ok">OK</Badge> : <Badge tone={r.status === "DUPLICATE" ? "warn" : "bad"}>{r.status.toLowerCase()}</Badge>}
                         {r.errorMessage ? <span className="ml-2 text-muted">{r.errorMessage}</span> : null}

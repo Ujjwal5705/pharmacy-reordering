@@ -35,7 +35,8 @@ export default async function OrdersPage() {
                       For {o.familyMember.name} · {o.items.map((i) => i.product.name).join(", ")}
                     </p>
                     <p className="text-sm text-muted">
-                      {dateTime(o.createdAt)} · {money(o.subtotalPaise)}
+                      {dateTime(o.createdAt)}
+                      {o.status === "CANCELLED" || o.status === "REJECTED" ? null : ` · ${money(o.subtotalPaise)}`}
                     </p>
                   </div>
                   <ChevronRight aria-hidden className="size-5 shrink-0 text-muted" />

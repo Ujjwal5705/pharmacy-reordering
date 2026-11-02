@@ -23,7 +23,7 @@ Company A (46 stores in Kolkata and Howrah, plus a central warehouse) loses repe
 | Result | Value |
 |---|---|
 | Screens | login + 7 customer · 2 pharmacist · 1 store · 3 operations (all backed by the database) |
-| Automated tests | **152 Vitest tests passed** (101 unit + 51 PostgreSQL integration) and **5 Playwright browser journeys passed** |
+| Automated tests | **155 Vitest tests passed** (104 unit + 51 PostgreSQL integration) and **5 Playwright browser journeys passed** |
 | Verified from a fresh clone | install → migrate → seed → production build → full journey → all test suites |
 
 ---
@@ -55,13 +55,13 @@ Company A (46 stores in Kolkata and Howrah, plus a central warehouse) loses repe
 | Entity | Why it exists / important rules |
 |---|---|
 | `User`, `FamilyMember` | One login per customer. Patients are family members, each with their own cart, prescriptions and reminders. Staff carry `role`, an optional `storeId` (store scope) and `pharmacistRegNo`. Only accounts with a registration number can make prescription decisions. |
-| `Product`, `MedicinePolicy` | Products have strength, form, pack size, price in **integer paise**, schedule `category` and a `genericGroup` (equivalent brand/generic products). Policies are **versioned and effective-dated per category**: `onlineOrderable`, `prescriptionRequired`, `pharmacistApprovalRequired`, `h1RegisterRequired`. |
+| `Product`, `MedicinePolicy` | Products have strength, form, pack size, price in **integer paise**, schedule `category`, a `genericGroup` (equivalent brand/generic products) and a `refillReminders` catalogue flag for repeat medicines. Policies are **versioned and effective-dated per category**: `onlineOrderable`, `prescriptionRequired`, `pharmacistApprovalRequired`, `h1RegisterRequired`. |
 | `Store`, `Locality`, `InventoryItem`, `StockReservation`, `StockImportBatch/Row` | `onHand` and `reserved` per store and product (`CHECK 0 ≤ reserved ≤ onHand`). Reservations are HELD → CONSUMED (at packing) or RELEASED (reject/cancel/reduce). Each CSV import keeps every row with its status for the preview and history. |
 | `Order`, `OrderItem`, `OrderStatusEvent`, `PaymentRecord` | Order status and routing status are separate. Items snapshot the policy applied at submission and keep `requestedProductId` so a substitution is always visible. Every transition writes a status event. Payments are test records only. |
 | `Prescription`, `ExtractionRun`, `ExtractedLine`, `ExtractedField` | The file is an encrypted blob under a random key; the database holds only metadata. Each extraction run stores provider, status, overall confidence and per-field value plus confidence, but never the raw OCR text. |
 | `PharmacistReview`, `ReviewItemDecision`, `H1RegisterEntry` | Who decided what, with which registration number, against which prescription and AI draft. Holds the verified prescriber and date, plus the H1 register (patient and prescriber details, drug, quantity, date) linked one-to-one to the item. |
 | `SubstitutionProposal`, `Consent` | A generic proposal records the proposing pharmacist; the customer’s answer is a `Consent` record (with wording version). Refill reminder opt-ins are also consents. |
-| `RefillPlan`, `NotificationLog` | Created only for pharmacist-approved items. Dates are calculated only from pharmacist-confirmed units per day. Notifications are mock logs that hold only an order number or plan ID. |
+| `RefillPlan`, `NotificationLog` | Created only for pharmacist-approved items whose product is marked for refill reminders. Dates are calculated only from pharmacist-confirmed units per day. Notifications are mock logs that hold only an order number or plan ID. |
 | `AuditEvent` | Append-only (database trigger). Records file views, decisions, policy changes, transitions, stock imports, logins and access denials. Metadata holds IDs and codes only. |
 | `Session`, `OtpChallenge`, `RateLimitHit` | Tokens and codes are stored only as hashes. Rate limits live in Postgres, so they work across instances. |
 
@@ -81,7 +81,7 @@ Company A (46 stores in Kolkata and Howrah, plus a central warehouse) loses repe
 4. **Submit and route.** The order is created as `AWAITING_PHARMACIST` (or `APPROVED` if it has no prescription items). Routing then tries stores in distance order, reserving every line in one transaction per store. The first store that can supply everything wins. If none can, the order is marked **NO_STOCK** (never split) and operations sees it.
 5. **Pharmacist review.** The queue is oldest first, shows waiting time against the 10-minute target, and flags manual-read and H1 orders. The review screen shows the original image (zoom/rotate), the draft with confidence, and pre-filled editable verified fields. The pharmacist decides each item (approve with quantity and dosage as written / propose a generic / reject with a reason), or puts the whole order on hold for re-upload or rejects it. The approval gate is checked inside the same transaction.
 6. **Store fulfilment.** Pick → pack (store invoice number; reserved stock is consumed) → hand over (who collected) → delivered. The dispatch gate is re-evaluated at every step against the *live* policy.
-7. **Tracking and refills.** The customer sees a timeline, the pharmacist’s reasons, consent requests and the assigned store. On delivery each approved item gets an estimated run-out date of *delivery date + ⌊units supplied ÷ units per day⌋*. Opted-in plans produce an in-app reminder (and a mock SMS/WhatsApp entry from the reminder job) a configurable number of days before.
+7. **Tracking and refills.** The customer sees a timeline, the pharmacist’s reasons, consent requests and the assigned store. On delivery each approved repeat medicine gets an estimated run-out date of *delivery date + ⌊units supplied ÷ units per day⌋*. Opted-in plans produce an in-app reminder (and a mock SMS/WhatsApp entry from the reminder job) a configurable number of days before.
 
 ---
 
@@ -153,7 +153,7 @@ The same floor is a database CHECK constraint on `MedicinePolicy`, so even a dir
   - Encryption is AES-256-GCM via Node’s crypto; there is no custom cryptography. The key comes only from `PRESCRIPTION_ENCRYPTION_KEY` (generated locally by `setup:env`, never committed) and is labelled with a key ID for rotation.
   - The storage key is bound in as associated data, so a blob moved to another record fails to decrypt. The file is stored under a random 128-bit name outside any public directory, and path traversal is blocked by a strict name pattern.
   - Files are served only by a route handler that authorises each request: owner, or a pharmacist whose store scope covers an order using that prescription. Store staff and operations never see images.
-  - Responses are streamed with `Cache-Control: no-store`, `nosniff`, a restrictive CSP and inline disposition. There is no permanent URL. Every view and every denial is audited.
+  - Responses are streamed with `Cache-Control: no-store`, `nosniff`, a restrictive CSP and inline disposition. There is no permanent URL. Every view and every denial is audited: each display uses a fresh per-render URL so the browser cannot reuse an earlier copy without a logged request, and collapsed previews are only fetched when opened.
 - **Authentication and sessions.** OTP codes are hashed per challenge, compared in constant time, single-use, expire after 5 minutes, and allow 5 attempts. Sessions are 32 random bytes stored as SHA-256. The demo OTP works only when `APP_ENV` is `demo` or `test`; `APP_ENV` defaults to `production` when unset, and startup **fails** if a demo OTP is configured with `APP_ENV=production`, so it cannot be enabled by accident.
 - **Authorisation.** Every service takes an explicit actor and checks role, ownership and store scope. Every staff page also checks its role, because App Router layouts are not a security boundary. Wrong-role users see a permission-denied page.
 - **CSRF and input.** Server actions are origin-checked by Next.js. The upload route rejects requests whose `Origin` does not match the host. Cookies are SameSite=Lax. All inputs are validated by Zod on the server, and schema errors are returned as readable validation messages.
@@ -215,7 +215,7 @@ All results below are from real runs on the final code (2 Nov 2026, macOS, Node 
 |---|---|
 | `npm run typecheck` | exit 0 |
 | `npm run lint` | exit 0 |
-| `npm test` (Vitest) | **8 files, 152 tests passed, 0 failed** |
+| `npm test` (Vitest) | **9 files, 155 tests passed, 0 failed** |
 | `npm run test:e2e` (Playwright, Chromium) | **5 tests passed, 0 failed** |
 | `npm run build` | production build succeeded |
 
@@ -223,7 +223,8 @@ All results below are from real runs on the final code (2 Nov 2026, macOS, Node 
 |---|---|---|
 | `unit/policy` | 16 | schedule categories, statutory floor, fail-closed, versions and effective dates, draft validation |
 | `unit/order-state-and-gates` | 17 | legal transitions per role, terminal states, approval and dispatch gate violations (H, H1, X, live policy change, substitution, stock) |
-| `unit/refill-geo-csv` | 19 | refill maths and rounding, missing dosage, awaiting delivery; haversine and nearest *full* store (no splitting); CSV headers, row errors, duplicates, BOM |
+| `unit/refill-geo-csv` | 20 | refill maths and rounding, missing dosage, awaiting delivery; haversine and nearest *full* store (no splitting); CSV headers, row errors (raw bad value kept), duplicates, BOM |
+| `unit/format` | 2 | customer-facing text helpers (reason punctuation, delivery address) |
 | `unit/extraction` | 32 | dosage notations, OCR parsing with per-field confidence, no guessed values, catalogue matching (matched/ambiguous/unmatched), pipeline timeout, provider error, invalid output, unsupported, low confidence |
 | `unit/security-primitives` | 17 | demo OTP impossible in production, external AI opt-in, mocked Claude adapter failures (refusal, truncation, invalid output, connection), AES-GCM tamper/wrong key/rebinding, upload signature checks, validation error mapping |
 | `integration/end-to-end-flow` | 6 | upload → draft → submit → routed (skips a nearer store without stock) → pharmacist approval → pick/pack/deliver → stock consumed → refill dated → opt-in → mock reminder, with no orders created |
@@ -253,6 +254,7 @@ Tests use deterministic fixtures and a separate `pharmacy_test` database; no tes
 - **[A10]** Bengali and Hindi strings are drafts needing native review. Only prominent strings are translated.
 - **[A11]** Central pharmacists see all stores; store-bound pharmacists see only their store. Orders without stock are visible to central pharmacists only.
 - **[A12]** Median verification time is measured from submission to the first pharmacist decision.
+- **[A13]** Which products offer refill reminders is a catalogue setting (`refillReminders`). In the demo it is on for the diabetes, blood-pressure and thyroid medicines and off for the short-course H1 item and devices. It is a business configuration, not a clinical judgement.
 
 **Limitations.** Local demo only, not deployed. Local OCR is weak on handwriting (by design, it falls back to manual review). The Claude adapter is tested only with mocked responses. OTP, SMS and WhatsApp are mocked, so production sign-in needs a real SMS adapter. Payments are simulated. Single-instance local file storage. No accessibility audit beyond semantic markup, labels and focus states. Not load-tested. Business success measures (30% online adoption, drop-off from 20% to 10%) are **not** claimed. The dashboard’s median verification time is computed from synthetic data only.
 

@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -12,7 +13,7 @@ import { isDomainError } from "@/server/errors";
 import { normaliseName, normaliseStrength } from "@/server/extraction/matcher";
 import { getReviewContext } from "@/server/queries/staff";
 import { recordReviewOpened } from "@/server/services/review";
-import { age, dateTime, money } from "@/lib/format";
+import { addressWithArea, age, dateTime, money } from "@/lib/format";
 import { getT } from "@/lib/i18n/server";
 import { ReviewForm, type ReviewItem } from "./review-form";
 
@@ -85,7 +86,9 @@ export default async function ReviewPage({ params }: { params: Promise<{ id: str
       <div className="flex flex-wrap items-center gap-3">
         <h1 className="text-2xl font-bold">{order.orderNumber}</h1>
         <OrderStatusBadge status={order.status} t={t} />
-        <Badge tone="neutral">Waiting {age(order.submittedAt)}</Badge>
+        <Badge tone="neutral">
+          {order.firstDecisionAt ? `Decided after ${age(order.submittedAt, order.firstDecisionAt)}` : `Waiting ${age(order.submittedAt)}`}
+        </Badge>
         {order.manualReviewRequired ? <Badge tone="warn">Manual reading required</Badge> : null}
         <span className="text-[15px] text-muted">
           Patient <strong className="text-ink">{order.familyMember.name}</strong> · ordered by {order.customer.name} · {order.store?.name ?? "not routed (no stock)"}
@@ -98,7 +101,7 @@ export default async function ReviewPage({ params }: { params: Promise<{ id: str
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]">
         <div className="space-y-4 lg:sticky lg:top-20 lg:self-start">
-          {order.prescription ? <PrescriptionViewer id={order.prescription.id} mimeType={order.prescription.mimeType} /> : null}
+          {order.prescription ? <PrescriptionViewer id={order.prescription.id} mimeType={order.prescription.mimeType} viewKey={randomUUID()} /> : null}
           <Card>
             <CardHeader
               title={
@@ -182,7 +185,7 @@ export default async function ReviewPage({ params }: { params: Promise<{ id: str
               }}
               h1Defaults={{
                 patientName: order.familyMember.name,
-                patientAddress: `${order.deliveryAddress}, ${order.deliveryLocality.name}`,
+                patientAddress: addressWithArea(order.deliveryAddress, order.deliveryLocality.name),
                 prescriberAddress: field("prescriber_address")?.value ?? "",
               }}
               threshold={threshold}

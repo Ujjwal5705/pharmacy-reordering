@@ -43,5 +43,5 @@ actor so access control is enforced and testable outside the UI.
 
 ## Outcome
 
-- Vitest: 152 passed (101 unit, 51 PostgreSQL integration). Playwright: 5 passed.
+- Vitest: 155 passed (104 unit, 51 PostgreSQL integration). Playwright: 5 passed.
 - Verified from a fresh clone of the public repository (install, migrate, seed, build, browser journey, all suites).

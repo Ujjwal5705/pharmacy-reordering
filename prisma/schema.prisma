@@ -290,6 +290,8 @@ model Product {
   isGeneric    Boolean          @default(true)
   /// Products sharing a group are interchangeable generic/brand equivalents (same molecule, strength, form).
   genericGroup String?
+  /// Catalogue setting: offer refill reminders (repeat medicines). Not a clinical judgement.
+  refillReminders Boolean        @default(false)
   manufacturer String
   active       Boolean          @default(true)
   createdAt    DateTime         @default(now())
@@ -377,6 +379,8 @@ model StockImportRow {
   storeCode    String
   sku          String
   quantity     Int?
+  /// The quantity cell exactly as it appeared in the file, so operations can see what to fix.
+  rawQuantity  String?
   status       ImportRowStatus
   errorMessage String?
 

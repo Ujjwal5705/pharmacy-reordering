@@ -33,7 +33,7 @@ export default async function CustomerLayout({ children }: { children: React.Rea
           />
         </div>
       </div>
-      <main className="mx-auto max-w-4xl px-4 pb-28 pt-6 text-[17px] md:pb-12">{children}</main>
+      <main className="mx-auto max-w-4xl px-4 pb-28 pt-6 text-[17px] lg:pb-12">{children}</main>
       <BottomTabs items={nav} />
     </>
   );

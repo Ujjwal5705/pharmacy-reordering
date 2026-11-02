@@ -75,7 +75,7 @@ export default async function PharmacistQueue({ searchParams }: { searchParams: 
             <table className="w-full min-w-[820px] text-left text-[15px]">
               <thead className="border-b border-line bg-canvas text-sm text-muted">
                 <tr>
-                  <th scope="col" className="px-4 py-3 font-semibold">Waiting</th>
+                  <th scope="col" className="px-4 py-3 font-semibold">{view === "decided" ? "Decision time" : "Waiting"}</th>
                   <th scope="col" className="px-4 py-3 font-semibold">Order</th>
                   <th scope="col" className="px-4 py-3 font-semibold">Patient</th>
                   <th scope="col" className="px-4 py-3 font-semibold">Items</th>
@@ -93,7 +93,7 @@ export default async function PharmacistQueue({ searchParams }: { searchParams: 
                     <tr key={o.id} className="hover:bg-canvas/60" data-testid="queue-row">
                       <td className="px-4 py-3">
                         <span className={cn("inline-flex items-center gap-1 font-semibold tabular-nums", over ? "text-bad" : "text-ink")}>
-                          <Clock aria-hidden className="size-4" /> {age(o.submittedAt)}
+                          <Clock aria-hidden className="size-4" /> {view === "decided" && o.firstDecisionAt ? age(o.submittedAt, o.firstDecisionAt) : age(o.submittedAt)}
                         </span>
                         {over ? <span className="block text-xs font-semibold text-bad">Over 10-min target</span> : null}
                       </td>

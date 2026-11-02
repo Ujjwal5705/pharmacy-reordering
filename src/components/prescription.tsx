@@ -77,11 +77,16 @@ export function ExtractionDraft({ run, compact = false }: { run: RunWithDetail |
   );
 }
 
-export function PrescriptionPreview({ id, mimeType, alt, className }: { id: string; mimeType: string; alt: string; className?: string }) {
-  const src = `/api/prescriptions/${id}/file`;
+/**
+ * `viewKey` is a per-render value from the server page. A new URL on every render stops the browser
+ * reusing an image it fetched earlier in the same tab, so each display reaches the server and is
+ * audited. Lazy loading means a collapsed preview is only fetched (and logged) when opened.
+ */
+export function PrescriptionPreview({ id, mimeType, alt, className, viewKey }: { id: string; mimeType: string; alt: string; className?: string; viewKey: string }) {
+  const src = `/api/prescriptions/${id}/file?view=${viewKey}`;
   if (mimeType === "application/pdf") {
-    return <iframe src={src} title={alt} className={className ?? "h-[70vh] w-full rounded-xl border border-line bg-white"} />;
+    return <iframe src={src} title={alt} loading="lazy" className={className ?? "h-[70vh] w-full rounded-xl border border-line bg-white"} />;
   }
   // eslint-disable-next-line @next/next/no-img-element -- authenticated, non-cacheable private file
-  return <img src={src} alt={alt} className={className ?? "w-full rounded-xl border border-line bg-white"} />;
+  return <img src={src} alt={alt} loading="lazy" className={className ?? "w-full rounded-xl border border-line bg-white"} />;
 }

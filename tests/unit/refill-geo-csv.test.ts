@@ -89,6 +89,14 @@ describe("stock CSV validation", () => {
     expect(r.rows[2].errorMessage).toMatch(/whole number/);
   });
 
+  it("keeps the raw cell of an invalid quantity so operations can see what to fix", () => {
+    const r = parseStockCsv("store_code,sku,quantity_on_hand\nSL01,MET500-G,twelve\nSL01,TEL40-G,\n", known);
+    expect(r.rows.map((x) => [x.status, x.quantity, x.rawQuantity])).toEqual([
+      ["ERROR", null, "twelve"],
+      ["ERROR", null, null],
+    ]);
+  });
+
   it("flags duplicate store+sku rows and keeps the first", () => {
     const r = parseStockCsv("store_code,sku,quantity_on_hand\nSL01,MET500-G,5\nSL01,MET500-G,9\n", known);
     expect(r.rows.map((x) => x.status)).toEqual(["VALID", "DUPLICATE"]);

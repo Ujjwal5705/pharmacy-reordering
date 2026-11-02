@@ -116,6 +116,8 @@ describe("3. H1 register details are captured before dispatch", () => {
     await submitReview(w.actors.pharmacist, orderId, { outcome: "DECIDE", header, items: [{ orderItemId: item.id, decision: "APPROVE", h1 }] });
     const entry = await db.h1RegisterEntry.findUniqueOrThrow({ where: { orderItemId: item.id } });
     expect(entry).toMatchObject({ patientName: h1.patientName, prescriberName: h1.prescriberName, quantitySupplied: 2, recordedById: w.actors.pharmacist.id });
+    // A short-course product not marked for refill reminders gets no reminder plan.
+    expect(await db.refillPlan.count({ where: { sourceOrderId: orderId } })).toBe(0);
 
     await db.h1RegisterEntry.delete({ where: { id: entry.id } });
     await expect(advanceFulfilment(w.actors.staffNear, orderId, { step: "START_PICKING" })).rejects.toMatchObject({ code: "DISPATCH_BLOCKED" });

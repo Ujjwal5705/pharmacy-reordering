@@ -63,6 +63,7 @@ export async function buildWorld() {
     narcotic: await mk("NRC10-N", "Narcodem 10 mg", "Narcodem", "10 mg", "NARCOTIC", 35000, 10),
     otc: await mk("THM-01", "Digital thermometer", "Thermometer", "Digital", "OTC", 19900, 1),
   };
+  await db.product.updateMany({ where: { sku: { in: ["MET500-G", "MET500-B", "TEL40-G", "LEV50-G"] } }, data: { refillReminders: true } });
   const stock = async (storeId: string, productId: string, onHand: number) => db.inventoryItem.create({ data: { storeId, productId, onHand } });
   // NEAR: limited metformin, no brand; MID: plenty; FAR: plenty. Everyone stocks restricted items (in-store sale).
   for (const s of [near, mid, far]) {

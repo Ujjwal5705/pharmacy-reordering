@@ -26,7 +26,7 @@ export function NavLinks({ items, className }: { items: NavItem[]; className?: s
             href={item.href}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-lg px-3 text-[15px] font-medium",
+              "inline-flex min-h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-3 text-[15px] font-medium",
               active ? "bg-brand-soft text-brand-strong" : "text-ink-soft hover:bg-canvas",
             )}
           >
@@ -44,7 +44,7 @@ export function NavLinks({ items, className }: { items: NavItem[]; className?: s
 export function BottomTabs({ items }: { items: NavItem[] }) {
   const pathname = usePathname();
   return (
-    <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] md:hidden">
+    <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] lg:hidden">
       <ul className="mx-auto grid max-w-lg" style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}>
         {items.map((item) => {
           const active = isActive(pathname, item);

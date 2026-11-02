@@ -114,10 +114,12 @@ async function main() {
     ["BND-20", "Adhesive bandage strips", "Adhesive bandage", "Assorted", "Strip", "Pack of 20", 20, 45, "OTC", true, null, "Generic (demo)"],
     ["THM-01", "Digital thermometer", "Thermometer", "Digital", "Device", "1 unit", 1, 199, "OTC", true, null, "Generic (demo)"],
   ];
+  // Repeat medicines (diabetes, blood pressure, thyroid) offer refill reminders; short courses and devices do not.
+  const REPEAT = new Set(["MET500-G", "MET500-B", "MET1000-G", "TEL40-G", "TEL40-B", "TEL80-G", "LEV50-G", "LEV50-B", "LEV25-G", "LEV100-G", "GLM1-G", "AML5-G"]);
   const products: Record<string, { id: string; pricePaise: number; unitsPerPack: number; category: MedicineCategory }> = {};
   for (const [sku, name, molecule, strength, form, packLabel, unitsPerPack, rupees, category, isGeneric, genericGroup, manufacturer] of productData) {
     const p = await db.product.create({
-      data: { sku, name, molecule, strength, form, packLabel, unitsPerPack, pricePaise: rupees * 100, category, isGeneric, genericGroup, manufacturer },
+      data: { sku, name, molecule, strength, form, packLabel, unitsPerPack, pricePaise: rupees * 100, category, isGeneric, genericGroup, manufacturer, refillReminders: REPEAT.has(sku) },
     });
     products[sku] = { id: p.id, pricePaise: p.pricePaise, unitsPerPack, category };
   }

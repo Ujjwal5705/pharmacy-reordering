@@ -31,6 +31,7 @@ export function CheckoutForm(props: {
   needsPrescription: boolean;
   prescriptions: Rx[];
   selectedRx: { id: string; mimeType: string } | null;
+  viewKey: string;
   run: RunWithDetail | null;
   localities: { id: string; name: string; pincode: string }[];
   localityId: string | null;
@@ -167,7 +168,7 @@ export function CheckoutForm(props: {
             </div>
             {props.selectedRx ? (
               <div className="grid gap-4 md:grid-cols-[minmax(0,220px)_1fr]">
-                <PrescriptionPreview id={props.selectedRx.id} mimeType={props.selectedRx.mimeType} alt="Your uploaded prescription" className="max-h-80 w-full rounded-xl border border-line bg-white object-contain" />
+                <PrescriptionPreview id={props.selectedRx.id} mimeType={props.selectedRx.mimeType} viewKey={props.viewKey} alt="Your uploaded prescription" className="max-h-80 w-full rounded-xl border border-line bg-white object-contain" />
                 <div className="space-y-3">
                   <ExtractionDraft run={props.run} />
                   {unclear ? (
@@ -255,7 +256,7 @@ export function CheckoutForm(props: {
         </Alert>
       ) : null}
 
-      <div className="sticky bottom-20 z-10 rounded-2xl border border-line bg-surface/95 p-4 shadow-lg backdrop-blur md:bottom-4">
+      <div className="sticky bottom-20 z-10 rounded-2xl border border-line bg-surface/95 p-4 shadow-lg backdrop-blur lg:bottom-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-sm text-muted">Total ({payment === "UPI_TEST" ? "UPI test" : "COD test"})</p>

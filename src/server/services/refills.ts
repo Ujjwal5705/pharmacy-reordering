@@ -11,14 +11,17 @@ import { notify } from "./notifications";
 
 export const REFILL_CONSENT_TEXT_VERSION = "refill-reminder-v1";
 
-/** One plan per pharmacist-approved item. Dates are only calculated later, from delivery. */
+/**
+ * One plan per pharmacist-approved item whose product the catalogue marks for refill reminders
+ * (repeat medicines). Dates are only calculated later, from delivery.
+ */
 export async function createRefillPlans(tx: Tx, orderId: string) {
   const order = await tx.order.findUniqueOrThrow({
     where: { id: orderId },
     include: { items: { where: { status: "APPROVED", approvedByReviewId: { not: null } }, include: { product: true, refillPlan: true } } },
   });
   for (const item of order.items) {
-    if (item.refillPlan) continue;
+    if (item.refillPlan || !item.product.refillReminders) continue;
     const packs = item.approvedQuantity ?? item.quantity;
     const upd = item.unitsPerDay === null ? null : Number(item.unitsPerDay);
     const est = estimateRefill({ packs, unitsPerPack: item.product.unitsPerPack, unitsPerDay: upd, startDate: null, remindDaysBefore: 0 });

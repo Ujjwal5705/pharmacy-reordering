@@ -4,10 +4,10 @@ import { useState } from "react";
 import { ExternalLink, RotateCw, ZoomIn, ZoomOut } from "lucide-react";
 
 /** Original prescription with zoom/rotate so the pharmacist can read small or skewed text. */
-export function PrescriptionViewer({ id, mimeType }: { id: string; mimeType: string }) {
+export function PrescriptionViewer({ id, mimeType, viewKey }: { id: string; mimeType: string; viewKey: string }) {
   const [zoom, setZoom] = useState(1);
   const [rot, setRot] = useState(0);
-  const src = `/api/prescriptions/${id}/file`;
+  const src = `/api/prescriptions/${id}/file?view=${viewKey}`;
   const btn = "grid size-10 place-items-center rounded-lg border border-line bg-surface hover:bg-canvas disabled:opacity-40";
   return (
     <div className="overflow-hidden rounded-[var(--radius-card)] border border-line bg-surface">
