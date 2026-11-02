@@ -34,6 +34,7 @@ test("customer reorders for a parent → pharmacist approves → store dispatche
   await customer.getByRole("link", { name: "Continue to checkout" }).click();
   await customer.waitForURL(/\/checkout/);
 
+  await expect(customer.getByTestId("rx-file-input")).toBeEnabled();
   await customer.getByTestId("rx-file-input").setInputFiles(FIXTURE);
   await customer.waitForURL(/rx=/);
   await expect(customer.getByTestId("extraction-draft").getByText("Prescription read")).toBeVisible();
@@ -102,6 +103,7 @@ test("unreadable prescription asks for a re-upload before the order can be sent"
   await customer.getByTestId("product-card").filter({ hasText: "Levothyroxine 50 mcg" }).filter({ hasText: "Generic" }).first().getByRole("button", { name: "Add to cart" }).click();
   await expect(customer.getByText("Added to cart")).toBeVisible();
   await customer.goto("/checkout");
+  await expect(customer.getByTestId("rx-file-input")).toBeEnabled();
   await customer.getByTestId("rx-file-input").setInputFiles(path.join(process.cwd(), "fixtures", "prescriptions", "rx-arif-mondal-blurred.png"));
   await customer.waitForURL(/rx=/);
   await expect(customer.getByText("We couldn’t read this clearly")).toBeVisible();

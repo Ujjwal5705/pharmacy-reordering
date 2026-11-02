@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Camera, FileUp, Loader2 } from "lucide-react";
 import { Alert, Button } from "@/components/ui";
 
@@ -18,6 +18,9 @@ export function PrescriptionUploader({ familyMemberId, onUploaded, label = "Uplo
   const [progress, setProgress] = useState<number | null>(null);
   const [phase, setPhase] = useState<"idle" | "uploading" | "reading">("idle");
   const [error, setError] = useState<string | null>(null);
+  // Stay disabled until hydrated, so a file chosen before React attaches handlers is never lost.
+  const [ready, setReady] = useState(false);
+  useEffect(() => setReady(true), []);
 
   function upload(file: File) {
     setError(null);
@@ -53,6 +56,7 @@ export function PrescriptionUploader({ familyMemberId, onUploaded, label = "Uplo
   }
 
   const busy = phase !== "idle";
+  const disabled = busy || !ready;
   return (
     <div className="space-y-3">
       <input
@@ -62,11 +66,11 @@ export function PrescriptionUploader({ familyMemberId, onUploaded, label = "Uplo
         accept="image/jpeg,image/png,application/pdf"
         className="sr-only"
         onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])}
-        disabled={busy}
+        disabled={disabled}
         data-testid="rx-file-input"
       />
       <div className="flex flex-wrap gap-2">
-        <Button type="button" variant="secondary" size="lg" disabled={busy} onClick={() => input.current?.click()}>
+        <Button type="button" variant="secondary" size="lg" disabled={disabled} onClick={() => input.current?.click()}>
           {busy ? <Loader2 aria-hidden className="size-5 animate-spin" /> : <FileUp aria-hidden className="size-5" />}
           {label}
         </Button>

@@ -78,6 +78,7 @@ export function LanguageSwitcher({ locale }: { locale: Locale }) {
       </label>
       <Globe aria-hidden className="mr-1 size-4 text-muted" />
       <select
+        key={locale}
         id="lang-switch"
         name="lang"
         defaultValue={locale}
