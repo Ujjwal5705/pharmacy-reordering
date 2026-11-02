@@ -104,3 +104,12 @@ describe("upload validation", () => {
     expect(() => validatePrescriptionFile({ name: "rx.png", type: "image/png", size: 0, bytes: Buffer.alloc(0) }, max)).toThrow(/empty/);
   });
 });
+
+describe("error mapping", () => {
+  it("turns schema failures into readable validation errors instead of a generic failure", async () => {
+    const { runAction } = await import("@/server/errors");
+    const { z } = await import("zod");
+    const r = await runAction("t", async () => z.object({ a: z.string().min(5, "At least 5 characters.") }).parse({ a: "x" }));
+    expect(r).toEqual({ ok: false, error: { code: "VALIDATION", message: "At least 5 characters.", details: [] } });
+  });
+});

@@ -1,6 +1,6 @@
 import "server-only";
 import { NextResponse } from "next/server";
-import { isDomainError, logUnexpected, type ErrorCode } from "./errors";
+import { asDomainError, logUnexpected, type ErrorCode } from "./errors";
 
 const STATUS: Partial<Record<ErrorCode, number>> = {
   UNAUTHENTICATED: 401,
@@ -28,8 +28,9 @@ export function isSameOrigin(req: Request) {
 }
 
 export function errorResponse(scope: string, e: unknown) {
-  if (isDomainError(e)) {
-    return NextResponse.json({ error: { code: e.code, message: e.message, details: e.details } }, { status: STATUS[e.code] ?? 400 });
+  const known = asDomainError(e);
+  if (known) {
+    return NextResponse.json({ error: { code: known.code, message: known.message, details: known.details } }, { status: STATUS[known.code] ?? 400 });
   }
   logUnexpected(scope, e);
   return NextResponse.json({ error: { code: "INTERNAL", message: "Something went wrong. Please try again.", details: [] } }, { status: 500 });

@@ -1,3 +1,5 @@
+import { ZodError } from "zod";
+
 export type ErrorCode =
   | "UNAUTHENTICATED"
   | "FORBIDDEN"
@@ -28,6 +30,16 @@ export function isDomainError(e: unknown): e is DomainError {
   return e instanceof DomainError;
 }
 
+/** Schema failures from service-level validation are user errors, not server faults. */
+export function asDomainError(e: unknown): DomainError | null {
+  if (e instanceof DomainError) return e;
+  if (e instanceof ZodError) {
+    const details = [...new Set(e.issues.map((i) => i.message))];
+    return new DomainError("VALIDATION", details.length === 1 ? details[0] : "Please check the details and try again.", details.length === 1 ? [] : details);
+  }
+  return null;
+}
+
 export type ActionResult<T = undefined> =
   | { ok: true; data: T; message?: string }
   | { ok: false; error: { code: ErrorCode | "INTERNAL"; message: string; details: string[] } };
@@ -43,7 +55,8 @@ export async function runAction<T>(scope: string, fn: () => Promise<T>, message?
   try {
     return { ok: true, data: await fn(), message };
   } catch (e) {
-    if (isDomainError(e)) return { ok: false, error: { code: e.code, message: e.message, details: e.details } };
+    const known = asDomainError(e);
+    if (known) return { ok: false, error: { code: known.code, message: known.message, details: known.details } };
     // Next.js uses thrown errors for redirect()/notFound(); let those propagate.
     if (e && typeof e === "object" && "digest" in e && String((e as { digest: unknown }).digest).startsWith("NEXT_")) {
       throw e;

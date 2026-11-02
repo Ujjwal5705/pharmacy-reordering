@@ -145,3 +145,34 @@ test("generic alternative needs the pharmacist's proposal and the customer's con
   await expect(customer.getByRole("heading", { level: 1 })).toContainText("Pharmacist approved");
   await expect(customer.getByText(/Generic alternative \(you consented\)/)).toBeVisible();
 });
+
+test("Schedule H1 approval requires the H1 register details", async ({ browser }) => {
+  const customer = await signIn(browser, "5550000004", { width: 390, height: 844 });
+  await customer.goto("/medicines?q=cefdinova");
+  await customer.getByTestId("product-card").first().getByRole("button", { name: "Add to cart" }).click();
+  await expect(customer.getByText("Added to cart")).toBeVisible();
+  await customer.goto("/checkout");
+  await expect(customer.getByTestId("rx-file-input")).toBeEnabled();
+  await customer.getByTestId("rx-file-input").setInputFiles(path.join(process.cwd(), "fixtures", "prescriptions", "rx-priya-das-h1.png"));
+  await customer.waitForURL(/rx=/);
+  await expect(customer.getByText("Schedule H1 · register entry")).toBeVisible();
+  await customer.getByTestId("place-order").click();
+  await customer.waitForURL(/\/orders\/.+placed=1/);
+  const orderNumber = (await customer.getByRole("heading", { level: 1 }).innerText()).match(/RX-\d+/)![0];
+
+  const pharmacist = await signIn(browser, "5550000101");
+  await pharmacist.getByTestId("queue-row").filter({ hasText: orderNumber }).getByRole("link", { name: "Review" }).click();
+  await expect(pharmacist.getByText("H1 register required")).toBeVisible();
+  await pharmacist.getByRole("radio", { name: "Approve" }).click();
+  const register = pharmacist.locator("fieldset", { hasText: "Schedule H1 register entry" });
+  await expect(register.getByLabel("Prescriber name")).toHaveValue("Dr. Kaushik Mitra");
+  await register.getByLabel("Patient address").fill("");
+  await pharmacist.getByTestId("submit-review").click();
+  await expect(pharmacist.getByRole("alert").filter({ hasText: "H1 register: patient address is required." })).toBeVisible();
+  await register.getByLabel("Patient address").fill("3 Placeholder Road, Gariahat, Kolkata");
+  await pharmacist.getByTestId("submit-review").click();
+  await pharmacist.waitForURL(/\/pharmacist$/);
+
+  await customer.reload();
+  await expect(customer.getByRole("heading", { level: 1 })).toContainText("Pharmacist approved");
+});
