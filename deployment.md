@@ -173,10 +173,7 @@ npx playwright install chromium   # once, for browser tests
 npm run test:e2e              # Playwright: starts its own server on :3100 against the test database
 ```
 
-Integration and browser tests use the separate `pharmacy_test` database, which `docker/init-db.sql` creates on first start. They never touch the demo data. Browser tests use the deterministic `fixture` extraction provider. No test calls a payment, SMS, WhatsApp or AI service.
-
-If your Docker volume was created before `docker/init-db.sql` existed, create the test DB once with:
-`docker compose exec db createdb -U pharmacy pharmacy_test`
+Integration and browser tests use a separate `pharmacy_test` database on the same Postgres server. The test setup creates and migrates it automatically, and never touches the demo data. Browser tests use the deterministic `fixture` extraction provider. No test calls a payment, SMS, WhatsApp or AI service.
 
 ## 10. Optional: Claude vision extraction
 
@@ -200,5 +197,5 @@ Handwritten prescriptions usually come back low-confidence from local OCR and go
 | `db:migrate` cannot connect | Make sure Docker is running and port 5433 is free, then `npm run db:up`. |
 | Upload says storage is not configured | `.env` is missing the encryption key. Run `npm run setup:env` (only if `.env` doesn’t exist) or add a base64 32-byte key, then `npm run db:seed`. |
 | Seeded prescription images fail to load | The encryption key changed after seeding. Run `npm run db:seed`. |
-| Tests fail with “Could not migrate the test database” | Start the DB (`npm run db:up`) and make sure the `pharmacy_test` database exists (section 9). |
+| Tests fail with “Could not prepare the test database” | Start the DB with `npm run db:up`. The test setup creates `pharmacy_test` itself. |
 | Port 3000 in use | `npx next dev -p 3001`. |
