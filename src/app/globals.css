@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens. Calm, restrained palette: deep teal for primary actions, neutral greys for
+ * structure, and semantic tones reserved for status (never decoration).
+ */
+@theme {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Noto Sans", "Noto Sans Bengali",
+    "Noto Sans Devanagari", "Helvetica Neue", Arial, sans-serif;
+
+  --color-canvas: #f5f7f6;
+  --color-surface: #ffffff;
+  --color-ink: #14201b;
+  --color-ink-soft: #3c4a44;
+  --color-muted: #5f6e67;
+  --color-line: #dde4e0;
+  --color-line-strong: #c3cec8;
+
+  --color-brand: #0f6b5c;
+  --color-brand-strong: #0b5549;
+  --color-brand-soft: #e2f1ec;
+
+  --color-ok: #166a3a;
+  --color-ok-soft: #e5f3ea;
+  --color-warn: #8a5300;
+  --color-warn-soft: #fff3dc;
+  --color-bad: #b42318;
+  --color-bad-soft: #fdeceb;
+  --color-info: #1d4f91;
+  --color-info-soft: #e8f0fb;
+
+  --radius-card: 14px;
+  --shadow-card: 0 1px 2px rgb(20 32 27 / 0.06), 0 1px 1px rgb(20 32 27 / 0.03);
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    background: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    line-height: 1.5;
+  }
+  :focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--color-brand) 55%, white);
+    outline-offset: 2px;
+  }
+  ::selection {
+    background: var(--color-brand-soft);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

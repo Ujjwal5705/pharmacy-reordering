@@ -42,6 +42,16 @@ export async function requirePageActor(): Promise<Actor> {
   return actor;
 }
 
+/**
+ * Per-page role check. Layout checks alone are not a security boundary in the App Router
+ * (a page segment can be fetched without its layout re-rendering), so data pages call this too.
+ */
+export async function requirePageRole(roles: Role[]): Promise<Actor> {
+  const actor = await requirePageActor();
+  if (!roles.includes(actor.role)) redirect(homeFor(actor.role));
+  return actor;
+}
+
 export function homeFor(role: Role) {
   switch (role) {
     case "CUSTOMER":

@@ -38,7 +38,7 @@ export type AppConfig = z.infer<typeof schema> & {
 
 let cached: AppConfig | null = null;
 
-export function loadConfig(source: NodeJS.ProcessEnv = process.env): AppConfig {
+export function loadConfig(source: Record<string, string | undefined> = process.env): AppConfig {
   const parsed = schema.safeParse(source);
   if (!parsed.success) {
     const keys = parsed.error.issues.map((i) => i.path.join(".")).join(", ");

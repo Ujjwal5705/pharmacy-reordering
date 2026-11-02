@@ -1,0 +1,157 @@
+/**
+ * Lightweight i18n for the most prominent navigation, status and call-to-action strings.
+ * Bengali and Hindi strings are draft translations for the prototype and need native review
+ * before release. Untranslated keys fall back to English.
+ */
+const en = {
+  "app.name": "Company A Pharmacy",
+  "app.tagline": "Monthly medicines, checked by a pharmacist",
+  "nav.home": "Home",
+  "nav.medicines": "Medicines",
+  "nav.cart": "Cart",
+  "nav.orders": "Orders",
+  "nav.family": "Family",
+  "nav.signOut": "Sign out",
+  "nav.queue": "Verification queue",
+  "nav.store": "Store orders",
+  "nav.dashboard": "Dashboard",
+  "nav.stock": "Stock import",
+  "nav.policies": "Medicine rules",
+  "lang.label": "Language",
+  "banner.demo": "Demo mode — all people, prescriptions and orders are fictional. Payments and messages are test-only.",
+  "home.greeting": "Hello",
+  "home.orderingFor": "Ordering for",
+  "home.reorderCta": "Reorder monthly medicines",
+  "home.reorderHint": "Adds the medicines from the last order to the cart. You review before anything is ordered.",
+  "home.findMedicines": "Find medicines",
+  "home.refills": "Refill reminders",
+  "home.activeOrders": "Active orders",
+  "cta.addToCart": "Add to cart",
+  "cta.checkout": "Continue to checkout",
+  "cta.submitOrder": "Place order",
+  "cta.upload": "Upload prescription",
+  "cta.reupload": "Upload a clearer photo",
+  "cta.approve": "Approve",
+  "cta.reject": "Reject",
+  "cta.requestReupload": "Request re-upload",
+  "cta.reorder": "Reorder",
+  "cta.track": "Track order",
+  "rx.required": "Prescription needed",
+  "rx.h1": "Schedule H1 · register entry",
+  "rx.blocked": "Not sold online",
+  "rx.otc": "No prescription needed",
+  "payment.testMode": "Test mode — no money is charged",
+  "status.AWAITING_PHARMACIST": "Awaiting pharmacist",
+  "status.NEEDS_REUPLOAD": "Re-upload required",
+  "status.AWAITING_CUSTOMER_CONSENT": "Awaiting your consent",
+  "status.APPROVED": "Pharmacist approved",
+  "status.REJECTED": "Rejected",
+  "status.PICKING": "Being picked",
+  "status.PACKED": "Packed",
+  "status.HANDED_TO_DELIVERY": "Out for delivery",
+  "status.DELIVERED": "Delivered",
+  "status.CANCELLED": "Cancelled",
+};
+
+export type DictKey = keyof typeof en;
+type Dict = Partial<Record<DictKey, string>>;
+
+const bn: Dict = {
+  "app.tagline": "মাসিক ওষুধ, ফার্মাসিস্ট দ্বারা যাচাই করা",
+  "nav.home": "হোম",
+  "nav.medicines": "ওষুধ",
+  "nav.cart": "কার্ট",
+  "nav.orders": "অর্ডার",
+  "nav.family": "পরিবার",
+  "nav.signOut": "সাইন আউট",
+  "nav.queue": "যাচাইয়ের তালিকা",
+  "nav.store": "দোকানের অর্ডার",
+  "nav.dashboard": "ড্যাশবোর্ড",
+  "lang.label": "ভাষা",
+  "banner.demo": "ডেমো মোড — সমস্ত ব্যক্তি, প্রেসক্রিপশন ও অর্ডার কাল্পনিক। পেমেন্ট ও বার্তা শুধুমাত্র পরীক্ষামূলক।",
+  "home.greeting": "নমস্কার",
+  "home.orderingFor": "যার জন্য অর্ডার",
+  "home.reorderCta": "মাসিক ওষুধ আবার অর্ডার করুন",
+  "home.reorderHint": "শেষ অর্ডারের ওষুধগুলি কার্টে যোগ হবে। অর্ডার দেওয়ার আগে আপনি দেখে নেবেন।",
+  "home.findMedicines": "ওষুধ খুঁজুন",
+  "home.refills": "রিফিল রিমাইন্ডার",
+  "home.activeOrders": "চলতি অর্ডার",
+  "cta.addToCart": "কার্টে যোগ করুন",
+  "cta.checkout": "চেকআউটে যান",
+  "cta.submitOrder": "অর্ডার দিন",
+  "cta.upload": "প্রেসক্রিপশন আপলোড করুন",
+  "cta.reupload": "আরও পরিষ্কার ছবি আপলোড করুন",
+  "cta.reorder": "আবার অর্ডার",
+  "cta.track": "অর্ডার ট্র্যাক করুন",
+  "rx.required": "প্রেসক্রিপশন প্রয়োজন",
+  "rx.blocked": "অনলাইনে বিক্রি হয় না",
+  "rx.otc": "প্রেসক্রিপশন লাগবে না",
+  "payment.testMode": "টেস্ট মোড — কোনো টাকা কাটা হবে না",
+  "status.AWAITING_PHARMACIST": "ফার্মাসিস্টের অপেক্ষায়",
+  "status.NEEDS_REUPLOAD": "আবার আপলোড প্রয়োজন",
+  "status.AWAITING_CUSTOMER_CONSENT": "আপনার সম্মতির অপেক্ষায়",
+  "status.APPROVED": "ফার্মাসিস্ট অনুমোদিত",
+  "status.REJECTED": "বাতিল (প্রত্যাখ্যাত)",
+  "status.PICKING": "সংগ্রহ করা হচ্ছে",
+  "status.PACKED": "প্যাক করা হয়েছে",
+  "status.HANDED_TO_DELIVERY": "ডেলিভারির পথে",
+  "status.DELIVERED": "ডেলিভারি হয়েছে",
+  "status.CANCELLED": "বাতিল",
+};
+
+const hi: Dict = {
+  "app.tagline": "मासिक दवाइयाँ, फार्मासिस्ट द्वारा जाँची गई",
+  "nav.home": "होम",
+  "nav.medicines": "दवाइयाँ",
+  "nav.cart": "कार्ट",
+  "nav.orders": "ऑर्डर",
+  "nav.family": "परिवार",
+  "nav.signOut": "साइन आउट",
+  "nav.queue": "सत्यापन कतार",
+  "nav.store": "स्टोर ऑर्डर",
+  "nav.dashboard": "डैशबोर्ड",
+  "lang.label": "भाषा",
+  "banner.demo": "डेमो मोड — सभी व्यक्ति, पर्चे और ऑर्डर काल्पनिक हैं। भुगतान और संदेश केवल परीक्षण के लिए हैं।",
+  "home.greeting": "नमस्ते",
+  "home.orderingFor": "किसके लिए ऑर्डर",
+  "home.reorderCta": "मासिक दवाइयाँ फिर से ऑर्डर करें",
+  "home.reorderHint": "पिछले ऑर्डर की दवाइयाँ कार्ट में जुड़ जाएँगी। ऑर्डर से पहले आप जाँच लेंगे।",
+  "home.findMedicines": "दवाइयाँ खोजें",
+  "home.refills": "रीफ़िल रिमाइंडर",
+  "home.activeOrders": "चालू ऑर्डर",
+  "cta.addToCart": "कार्ट में जोड़ें",
+  "cta.checkout": "चेकआउट पर जाएँ",
+  "cta.submitOrder": "ऑर्डर करें",
+  "cta.upload": "पर्चा अपलोड करें",
+  "cta.reupload": "साफ़ फ़ोटो अपलोड करें",
+  "cta.reorder": "फिर से ऑर्डर",
+  "cta.track": "ऑर्डर ट्रैक करें",
+  "rx.required": "पर्चा आवश्यक",
+  "rx.blocked": "ऑनलाइन नहीं बिकती",
+  "rx.otc": "पर्चे की ज़रूरत नहीं",
+  "payment.testMode": "टेस्ट मोड — कोई पैसा नहीं कटेगा",
+  "status.AWAITING_PHARMACIST": "फार्मासिस्ट की प्रतीक्षा",
+  "status.NEEDS_REUPLOAD": "फिर से अपलोड करें",
+  "status.AWAITING_CUSTOMER_CONSENT": "आपकी सहमति की प्रतीक्षा",
+  "status.APPROVED": "फार्मासिस्ट द्वारा स्वीकृत",
+  "status.REJECTED": "अस्वीकृत",
+  "status.PICKING": "निकाला जा रहा है",
+  "status.PACKED": "पैक हो गया",
+  "status.HANDED_TO_DELIVERY": "डिलीवरी के रास्ते में",
+  "status.DELIVERED": "डिलीवर हो गया",
+  "status.CANCELLED": "रद्द",
+};
+
+export const LOCALES = { en: "English", bn: "বাংলা", hi: "हिन्दी" } as const;
+export type Locale = keyof typeof LOCALES;
+const dicts: Record<Locale, Dict> = { en, bn, hi };
+
+export function isLocale(v: string | undefined): v is Locale {
+  return v === "en" || v === "bn" || v === "hi";
+}
+
+export function translator(locale: Locale) {
+  const d = dicts[locale];
+  return (key: DictKey) => d[key] ?? en[key];
+}
+export type T = ReturnType<typeof translator>;
