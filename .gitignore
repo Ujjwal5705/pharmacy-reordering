@@ -1,0 +1,45 @@
+# dependencies
+node_modules/
+
+# next.js / build
+.next/
+out/
+build/
+*.tsbuildinfo
+next-env.d.ts
+
+# environment — never commit real values
+.env
+.env.*
+!.env.example
+
+# private prescription storage, uploads and generated private documents
+storage/
+uploads/
+private/
+*.enc
+
+# local databases
+*.db
+*.sqlite
+pgdata/
+
+# OCR model cache
+*.traineddata
+.tesseract-cache/
+
+# test output
+coverage/
+test-results/
+playwright-report/
+playwright/.cache/
+
+# submission artefacts are built locally, not committed
+submission/
+*.zip
+
+# OS / editor
+.DS_Store
+*.log
+.vscode/*
+!.vscode/extensions.json

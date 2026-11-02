@@ -1,0 +1,23 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: pharmacy-reordering-db
+    restart: unless-stopped
+    environment:
+      # Local-only development credentials for a throwaway container. Not a secret.
+      POSTGRES_USER: pharmacy
+      POSTGRES_PASSWORD: pharmacy_local_dev
+      POSTGRES_DB: pharmacy
+    ports:
+      - "5433:5432"
+    volumes:
+      - pharmacy_pgdata:/var/lib/postgresql/data
+      - ./docker/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pharmacy -d pharmacy"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  pharmacy_pgdata:
