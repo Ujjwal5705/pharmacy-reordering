@@ -1,0 +1,787 @@
+// Domain model for the pharmacy online-reordering prototype.
+// Money is stored as integer paise. All seeded records are synthetic.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ───────────────────────────── enums ─────────────────────────────
+
+enum Role {
+  CUSTOMER
+  PHARMACIST
+  STORE_STAFF
+  OPS_ADMIN
+}
+
+enum Relation {
+  SELF
+  MOTHER
+  FATHER
+  SPOUSE
+  CHILD
+  SIBLING
+  GRANDPARENT
+  OTHER
+}
+
+enum MedicineCategory {
+  OTC
+  SCHEDULE_H
+  SCHEDULE_H1
+  SCHEDULE_X
+  NARCOTIC
+}
+
+enum OrderStatus {
+  AWAITING_PHARMACIST
+  NEEDS_REUPLOAD
+  AWAITING_CUSTOMER_CONSENT
+  APPROVED
+  REJECTED
+  PICKING
+  PACKED
+  HANDED_TO_DELIVERY
+  DELIVERED
+  CANCELLED
+}
+
+enum RoutingStatus {
+  NOT_ROUTED
+  ROUTED
+  NO_STOCK
+}
+
+enum OrderSource {
+  CATALOGUE
+  REORDER
+  REFILL_REMINDER
+}
+
+enum OrderItemStatus {
+  PENDING_REVIEW
+  NOT_REQUIRED
+  APPROVED
+  REJECTED
+  AWAITING_CONSENT
+}
+
+enum PaymentMethod {
+  UPI_TEST
+  COD_TEST
+}
+
+enum PaymentStatus {
+  TEST_PAID
+  TEST_REFUNDED
+  COD_PENDING
+  COD_COLLECTED
+  VOID
+}
+
+enum ReservationStatus {
+  HELD
+  CONSUMED
+  RELEASED
+}
+
+enum PrescriptionStatus {
+  ACTIVE
+  SUPERSEDED
+}
+
+enum ExtractionStatus {
+  SUCCEEDED
+  LOW_CONFIDENCE
+  UNREADABLE
+  FAILED
+  UNSUPPORTED
+  SKIPPED
+}
+
+enum MatchStatus {
+  MATCHED
+  AMBIGUOUS
+  UNMATCHED
+}
+
+enum ReviewOutcome {
+  APPROVED
+  PARTIALLY_APPROVED
+  REJECTED
+  REUPLOAD_REQUESTED
+  SUBSTITUTION_PROPOSED
+}
+
+enum ItemDecision {
+  APPROVE
+  REJECT
+  PROPOSE_SUBSTITUTE
+}
+
+enum SubstitutionStatus {
+  PENDING_CONSENT
+  ACCEPTED
+  DECLINED
+}
+
+enum ConsentType {
+  GENERIC_SUBSTITUTION
+  REFILL_REMINDERS
+}
+
+enum Channel {
+  IN_APP
+  SMS
+  WHATSAPP
+}
+
+enum RefillPlanStatus {
+  ACTIVE
+  NEEDS_DOSAGE
+  AWAITING_DELIVERY
+}
+
+enum ImportStatus {
+  PREVIEW
+  APPLIED
+  DISCARDED
+}
+
+enum ImportRowStatus {
+  VALID
+  ERROR
+  DUPLICATE
+}
+
+// ───────────────────────────── identity ─────────────────────────────
+
+model User {
+  id                String    @id @default(cuid())
+  phone             String    @unique
+  name              String
+  role              Role
+  /// Store scope for store staff and store-bound pharmacists. Null = all stores (central team).
+  storeId           String?
+  store             Store?    @relation(fields: [storeId], references: [id])
+  /// State pharmacy council registration number. Required for approval actions.
+  pharmacistRegNo   String?
+  defaultLocalityId String?
+  defaultLocality   Locality? @relation(fields: [defaultLocalityId], references: [id])
+  addressLine       String?
+  preferredLanguage String    @default("en")
+  active            Boolean   @default(true)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  sessions       Session[]
+  familyMembers  FamilyMember[]
+  cartItems      CartItem[]
+  orders         Order[]               @relation("CustomerOrders")
+  prescriptions  Prescription[]
+  reviews        PharmacistReview[]
+  refillPlans    RefillPlan[]
+  consents       Consent[]
+  notifications  NotificationLog[]
+  h1Entries      H1RegisterEntry[]
+  stockImports   StockImportBatch[]
+  proposals      SubstitutionProposal[]
+  policyVersions MedicinePolicy[]
+
+  @@index([role])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  /// SHA-256 of the random session token. The raw token only lives in the HttpOnly cookie.
+  tokenHash String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model OtpChallenge {
+  id         String    @id @default(cuid())
+  phone      String
+  codeHash   String
+  expiresAt  DateTime
+  attempts   Int       @default(0)
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([phone, createdAt])
+}
+
+model RateLimitHit {
+  id        String   @id @default(cuid())
+  key       String
+  createdAt DateTime @default(now())
+
+  @@index([key, createdAt])
+}
+
+model FamilyMember {
+  id          String   @id @default(cuid())
+  customerId  String
+  customer    User     @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  name        String
+  relation    Relation
+  yearOfBirth Int?
+  createdAt   DateTime @default(now())
+
+  cartItems     CartItem[]
+  orders        Order[]
+  prescriptions Prescription[]
+  refillPlans   RefillPlan[]
+
+  @@index([customerId])
+}
+
+// ───────────────────────────── locations & stores ─────────────────────────────
+
+model Locality {
+  id      String  @id @default(cuid())
+  name    String  @unique
+  pincode String
+  /// Approximate demo coordinates (WGS84). Not surveyed data.
+  lat     Decimal @db.Decimal(9, 6)
+  lng     Decimal @db.Decimal(9, 6)
+
+  users  User[]
+  orders Order[]
+}
+
+model Store {
+  id       String  @id @default(cuid())
+  code     String  @unique
+  name     String
+  address  String
+  lat      Decimal @db.Decimal(9, 6)
+  lng      Decimal @db.Decimal(9, 6)
+  isActive Boolean @default(true)
+
+  staff        User[]
+  inventory    InventoryItem[]
+  orders       Order[]
+  reservations StockReservation[]
+}
+
+// ───────────────────────────── catalogue & policy ─────────────────────────────
+
+model Product {
+  id           String           @id @default(cuid())
+  sku          String           @unique
+  name         String
+  molecule     String
+  strength     String
+  form         String
+  packLabel    String
+  unitsPerPack Int
+  pricePaise   Int
+  category     MedicineCategory
+  isGeneric    Boolean          @default(true)
+  /// Products sharing a group are interchangeable generic/brand equivalents (same molecule, strength, form).
+  genericGroup String?
+  manufacturer String
+  active       Boolean          @default(true)
+  createdAt    DateTime         @default(now())
+
+  inventory        InventoryItem[]
+  orderItems       OrderItem[]            @relation("OrderItemProduct")
+  requestedItems   OrderItem[]            @relation("OrderItemRequestedProduct")
+  cartItems        CartItem[]
+  refillPlans      RefillPlan[]
+  h1Entries        H1RegisterEntry[]
+  proposalsFrom    SubstitutionProposal[] @relation("ProposalOriginal")
+  proposalsTo      SubstitutionProposal[] @relation("ProposalSubstitute")
+  matchedLines     ExtractedLine[]
+  reviewSubstitute ReviewItemDecision[]
+
+  @@index([molecule])
+  @@index([category])
+  @@index([genericGroup])
+}
+
+/// Versioned, effective-dated rules per medicine category. The resolver picks the highest
+/// version whose window contains "now"; if none exists the category fails closed (not orderable).
+model MedicinePolicy {
+  id                         String           @id @default(cuid())
+  category                   MedicineCategory
+  version                    Int
+  effectiveFrom              DateTime
+  effectiveTo                DateTime?
+  onlineOrderable            Boolean
+  prescriptionRequired       Boolean
+  pharmacistApprovalRequired Boolean
+  h1RegisterRequired         Boolean
+  description                String
+  createdById                String?
+  createdBy                  User?            @relation(fields: [createdById], references: [id])
+  createdAt                  DateTime         @default(now())
+
+  orderItems OrderItem[]
+
+  @@unique([category, version])
+  @@index([category, effectiveFrom])
+}
+
+// ───────────────────────────── inventory ─────────────────────────────
+
+model InventoryItem {
+  id            String   @id @default(cuid())
+  storeId       String
+  store         Store    @relation(fields: [storeId], references: [id])
+  productId     String
+  product       Product  @relation(fields: [productId], references: [id])
+  /// Physical units (packs) from the latest daily stock snapshot, minus packed sales since.
+  onHand        Int
+  /// Packs held for open orders. CHECK constraint keeps 0 <= reserved <= onHand.
+  reserved      Int      @default(0)
+  lastBatchId   String?
+  lastBatch     StockImportBatch? @relation(fields: [lastBatchId], references: [id])
+  updatedAt     DateTime @updatedAt
+
+  @@unique([storeId, productId])
+  @@index([productId])
+}
+
+model StockImportBatch {
+  id           String       @id @default(cuid())
+  fileName     String
+  uploadedById String
+  uploadedBy   User         @relation(fields: [uploadedById], references: [id])
+  status       ImportStatus @default(PREVIEW)
+  totalRows    Int
+  validRows    Int
+  errorRows    Int
+  createdAt    DateTime     @default(now())
+  appliedAt    DateTime?
+
+  rows      StockImportRow[]
+  inventory InventoryItem[]
+}
+
+model StockImportRow {
+  id           String          @id @default(cuid())
+  batchId      String
+  batch        StockImportBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  rowNumber    Int
+  storeCode    String
+  sku          String
+  quantity     Int?
+  status       ImportRowStatus
+  errorMessage String?
+
+  @@unique([batchId, rowNumber])
+}
+
+model StockReservation {
+  id          String            @id @default(cuid())
+  orderId     String
+  order       Order             @relation(fields: [orderId], references: [id])
+  orderItemId String
+  orderItem   OrderItem         @relation(fields: [orderItemId], references: [id])
+  storeId     String
+  store       Store             @relation(fields: [storeId], references: [id])
+  productId   String
+  quantity    Int
+  status      ReservationStatus @default(HELD)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@index([orderId])
+  @@index([orderItemId, status])
+}
+
+// ───────────────────────────── cart & orders ─────────────────────────────
+
+model CartItem {
+  id             String       @id @default(cuid())
+  customerId     String
+  customer       User         @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  familyMemberId String
+  familyMember   FamilyMember @relation(fields: [familyMemberId], references: [id], onDelete: Cascade)
+  productId      String
+  product        Product      @relation(fields: [productId], references: [id])
+  quantity       Int
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@unique([familyMemberId, productId])
+  @@index([customerId])
+}
+
+model Order {
+  id                   String        @id @default(cuid())
+  orderNumber          String        @unique
+  customerId           String
+  customer             User          @relation("CustomerOrders", fields: [customerId], references: [id])
+  familyMemberId       String
+  familyMember         FamilyMember  @relation(fields: [familyMemberId], references: [id])
+  status               OrderStatus
+  source               OrderSource   @default(CATALOGUE)
+  routingStatus        RoutingStatus @default(NOT_ROUTED)
+  storeId              String?
+  store                Store?        @relation(fields: [storeId], references: [id])
+  distanceKm           Decimal?      @db.Decimal(6, 2)
+  deliveryLocalityId   String
+  deliveryLocality     Locality      @relation(fields: [deliveryLocalityId], references: [id])
+  deliveryAddress      String
+  subtotalPaise        Int
+  requiresPharmacist   Boolean
+  /// Set when automated extraction could not read the prescription; pharmacist must read it unaided.
+  manualReviewRequired Boolean       @default(false)
+  prescriptionId       String?
+  prescription         Prescription? @relation("CurrentPrescription", fields: [prescriptionId], references: [id])
+  rejectionReason      String?
+  storeInvoiceNumber   String?
+  deliveryPartner      String?
+  submittedAt          DateTime      @default(now())
+  firstDecisionAt      DateTime?
+  approvedAt           DateTime?
+  routedAt             DateTime?
+  pickedAt             DateTime?
+  packedAt             DateTime?
+  handedOverAt         DateTime?
+  deliveredAt          DateTime?
+  cancelledAt          DateTime?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  items         OrderItem[]
+  events        OrderStatusEvent[]
+  payment       PaymentRecord?
+  reviews       PharmacistReview[]
+  reservations  StockReservation[]
+  h1Entries     H1RegisterEntry[]
+  proposals     SubstitutionProposal[]
+  refillPlans   RefillPlan[]
+
+  @@index([status])
+  @@index([storeId, status])
+  @@index([customerId, createdAt])
+}
+
+model OrderItem {
+  id                         String           @id @default(cuid())
+  orderId                    String
+  order                      Order            @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId                  String
+  product                    Product          @relation("OrderItemProduct", fields: [productId], references: [id])
+  /// Product the customer originally asked for, kept when a consented generic substitution is applied.
+  requestedProductId         String
+  requestedProduct           Product          @relation("OrderItemRequestedProduct", fields: [requestedProductId], references: [id])
+  quantity                   Int
+  approvedQuantity           Int?
+  unitPricePaise             Int
+  status                     OrderItemStatus
+  // Policy snapshot taken at submission; the dispatch gate re-evaluates the live policy as well.
+  category                   MedicineCategory
+  policyId                   String
+  policy                     MedicinePolicy   @relation(fields: [policyId], references: [id])
+  prescriptionRequired       Boolean
+  pharmacistApprovalRequired Boolean
+  h1RegisterRequired         Boolean
+  // Pharmacist-confirmed values (never written by the extraction pipeline).
+  dosageInstruction          String?
+  unitsPerDay                Decimal?         @db.Decimal(6, 2)
+  approvedByReviewId         String?
+
+  reservations StockReservation[]
+  decisions    ReviewItemDecision[]
+  h1Entry      H1RegisterEntry?
+  proposals    SubstitutionProposal[]
+  refillPlan   RefillPlan?
+
+  @@index([orderId])
+}
+
+model OrderStatusEvent {
+  id         String       @id @default(cuid())
+  orderId    String
+  order      Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  fromStatus OrderStatus?
+  toStatus   OrderStatus
+  actorId    String?
+  actorRole  String
+  note       String?
+  createdAt  DateTime     @default(now())
+
+  @@index([orderId, createdAt])
+}
+
+model PaymentRecord {
+  id            String        @id @default(cuid())
+  orderId       String        @unique
+  order         Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  method        PaymentMethod
+  status        PaymentStatus
+  amountPaise   Int
+  /// Test-mode reference only. No real payment instrument is ever collected.
+  testReference String
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+// ───────────────────────────── prescriptions & extraction ─────────────────────────────
+
+model Prescription {
+  id             String             @id @default(cuid())
+  customerId     String
+  customer       User               @relation(fields: [customerId], references: [id])
+  familyMemberId String
+  familyMember   FamilyMember       @relation(fields: [familyMemberId], references: [id])
+  /// Random opaque file name inside PRIVATE_STORAGE_DIR. Never derived from user input.
+  storageKey     String             @unique
+  mimeType       String
+  sizeBytes      Int
+  /// SHA-256 of the encrypted blob, for integrity checks.
+  cipherSha256   String
+  keyId          String
+  status         PrescriptionStatus @default(ACTIVE)
+  uploadedAt     DateTime           @default(now())
+
+  extractionRuns ExtractionRun[]
+  orders         Order[]            @relation("CurrentPrescription")
+  reviews        PharmacistReview[]
+
+  @@index([customerId, familyMemberId])
+}
+
+model ExtractionRun {
+  id                String           @id @default(cuid())
+  prescriptionId    String
+  prescription      Prescription     @relation(fields: [prescriptionId], references: [id], onDelete: Cascade)
+  provider          String
+  status            ExtractionStatus
+  overallConfidence Decimal?         @db.Decimal(4, 3)
+  /// Machine-readable failure code (e.g. TIMEOUT, PROVIDER_ERROR, INVALID_RESPONSE). No content.
+  errorCode         String?
+  durationMs        Int?
+  createdAt         DateTime         @default(now())
+
+  fields  ExtractedField[]
+  lines   ExtractedLine[]
+  reviews PharmacistReview[]
+
+  @@index([prescriptionId, createdAt])
+}
+
+model ExtractedField {
+  id         String        @id @default(cuid())
+  runId      String
+  run        ExtractionRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  /// patient_name | prescriber_name | prescriber_reg_no | prescriber_address | prescription_date
+  key        String
+  value      String?
+  confidence Decimal       @db.Decimal(4, 3)
+
+  @@unique([runId, key])
+}
+
+model ExtractedLine {
+  id                 String        @id @default(cuid())
+  runId              String
+  run                ExtractionRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  lineIndex          Int
+  medicineName       String?
+  nameConfidence     Decimal       @db.Decimal(4, 3)
+  strength           String?
+  strengthConfidence Decimal       @db.Decimal(4, 3)
+  form               String?
+  dosageText         String?
+  unitsPerDay        Decimal?      @db.Decimal(6, 2)
+  dosageConfidence   Decimal       @db.Decimal(4, 3)
+  durationDays       Int?
+  durationConfidence Decimal       @db.Decimal(4, 3)
+  quantityUnits      Int?
+  quantityConfidence Decimal       @db.Decimal(4, 3)
+  /// True when quantity was calculated from the written dosage x duration rather than written explicitly.
+  quantityDerived    Boolean       @default(false)
+  matchStatus        MatchStatus
+  matchedProductId   String?
+  matchedProduct     Product?      @relation(fields: [matchedProductId], references: [id])
+  matchScore         Decimal?      @db.Decimal(4, 3)
+  matchReason        String?
+  candidates         Json?
+
+  @@unique([runId, lineIndex])
+}
+
+// ───────────────────────────── pharmacist review ─────────────────────────────
+
+model PharmacistReview {
+  id               String        @id @default(cuid())
+  orderId          String
+  order            Order         @relation(fields: [orderId], references: [id])
+  prescriptionId   String?
+  prescription     Prescription? @relation(fields: [prescriptionId], references: [id])
+  extractionRunId  String?
+  extractionRun    ExtractionRun? @relation(fields: [extractionRunId], references: [id])
+  reviewerId       String
+  reviewer         User          @relation(fields: [reviewerId], references: [id])
+  reviewerRegNo    String
+  outcome          ReviewOutcome
+  reason           String?
+  // Pharmacist-verified prescription header fields (pre-filled from the AI draft, editable).
+  patientName      String?
+  prescriberName   String?
+  prescriberRegNo  String?
+  prescriptionDate DateTime?
+  createdAt        DateTime      @default(now())
+
+  items       ReviewItemDecision[]
+  proposals   SubstitutionProposal[]
+
+  @@index([orderId, createdAt])
+}
+
+model ReviewItemDecision {
+  id                  String       @id @default(cuid())
+  reviewId            String
+  review              PharmacistReview @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  orderItemId         String
+  orderItem           OrderItem    @relation(fields: [orderItemId], references: [id])
+  decision            ItemDecision
+  approvedQuantity    Int?
+  dosageInstruction   String?
+  unitsPerDay         Decimal?     @db.Decimal(6, 2)
+  reason              String?
+  substituteProductId String?
+  substituteProduct   Product?     @relation(fields: [substituteProductId], references: [id])
+
+  @@unique([reviewId, orderItemId])
+}
+
+/// Register entry for Schedule H1 supplies (prescriber and patient details, drug, quantity).
+model H1RegisterEntry {
+  id                String    @id @default(cuid())
+  orderId           String
+  order             Order     @relation(fields: [orderId], references: [id])
+  orderItemId       String    @unique
+  orderItem         OrderItem @relation(fields: [orderItemId], references: [id])
+  productId         String
+  product           Product   @relation(fields: [productId], references: [id])
+  patientName       String
+  patientAddress    String
+  prescriberName    String
+  prescriberAddress String
+  prescriberRegNo   String?
+  prescriptionDate  DateTime
+  quantitySupplied  Int
+  recordedById      String
+  recordedBy        User      @relation(fields: [recordedById], references: [id])
+  createdAt         DateTime  @default(now())
+}
+
+model SubstitutionProposal {
+  id                  String             @id @default(cuid())
+  orderId             String
+  order               Order              @relation(fields: [orderId], references: [id])
+  orderItemId         String
+  orderItem           OrderItem          @relation(fields: [orderItemId], references: [id])
+  reviewId            String
+  review              PharmacistReview   @relation(fields: [reviewId], references: [id])
+  originalProductId   String
+  originalProduct     Product            @relation("ProposalOriginal", fields: [originalProductId], references: [id])
+  substituteProductId String
+  substituteProduct   Product            @relation("ProposalSubstitute", fields: [substituteProductId], references: [id])
+  proposedById        String
+  proposedBy          User               @relation(fields: [proposedById], references: [id])
+  status              SubstitutionStatus @default(PENDING_CONSENT)
+  consentId           String?            @unique
+  consent             Consent?           @relation(fields: [consentId], references: [id])
+  decidedAt           DateTime?
+  createdAt           DateTime           @default(now())
+
+  @@index([orderId, status])
+}
+
+model Consent {
+  id                String      @id @default(cuid())
+  customerId        String
+  customer          User        @relation(fields: [customerId], references: [id])
+  type              ConsentType
+  granted           Boolean
+  channel           Channel?
+  subjectType       String
+  subjectId         String
+  /// Version of the consent wording shown to the customer.
+  textVersion       String
+  createdAt         DateTime    @default(now())
+
+  proposal SubstitutionProposal?
+
+  @@index([customerId, type])
+  @@index([subjectType, subjectId])
+}
+
+// ───────────────────────────── refills & notifications ─────────────────────────────
+
+model RefillPlan {
+  id                 String           @id @default(cuid())
+  customerId         String
+  customer           User             @relation(fields: [customerId], references: [id])
+  familyMemberId     String
+  familyMember       FamilyMember     @relation(fields: [familyMemberId], references: [id])
+  productId          String
+  product            Product          @relation(fields: [productId], references: [id])
+  sourceOrderId      String
+  sourceOrder        Order            @relation(fields: [sourceOrderId], references: [id])
+  sourceOrderItemId  String           @unique
+  sourceOrderItem    OrderItem        @relation(fields: [sourceOrderItemId], references: [id])
+  packsSupplied      Int
+  unitsSupplied      Int
+  unitsPerDay        Decimal?         @db.Decimal(6, 2)
+  startDate          DateTime?
+  runOutDate         DateTime?
+  remindAt           DateTime?
+  status             RefillPlanStatus
+  optedIn            Boolean          @default(false)
+  channel            Channel          @default(IN_APP)
+  lastReminderSentAt DateTime?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  @@index([customerId, optedIn])
+}
+
+model NotificationLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  channel   Channel
+  template  String
+  /// Mock adapters only: no real message leaves the system.
+  status    String
+  /// Synthetic metadata only (order number, template variables without health details).
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+// ───────────────────────────── audit ─────────────────────────────
+
+/// Append-only. A database trigger rejects UPDATE and DELETE on this table.
+model AuditEvent {
+  id         String   @id @default(cuid())
+  actorId    String?
+  actorRole  String
+  action     String
+  entityType String
+  entityId   String
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId, createdAt])
+  @@index([action, createdAt])
+}

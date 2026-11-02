@@ -1,0 +1,335 @@
+{
+  "fixtures": [
+    {
+      "file": "rx-sunita-ghosh.png",
+      "description": "Readable printed prescription: metformin with written dosage, levothyroxine 'as directed' (no dosage).",
+      "sha256": "6caec2cb5282303e348ac318c645af30b95a0377a0e6638e0be8dd209ce25af1",
+      "transcription": {
+        "pageConfidence": 0.93,
+        "fields": [
+          {
+            "key": "patient_name",
+            "value": "Sunita Ghosh",
+            "confidence": 0.95
+          },
+          {
+            "key": "prescriber_name",
+            "value": "Dr. Arindam Banerjee",
+            "confidence": 0.94
+          },
+          {
+            "key": "prescriber_reg_no",
+            "value": "WBMC-DEMO-1042",
+            "confidence": 0.9
+          },
+          {
+            "key": "prescriber_address",
+            "value": "12 Demo Lane, Sector II, Salt Lake, Kolkata",
+            "confidence": 0.88
+          },
+          {
+            "key": "prescription_date",
+            "value": "03/10/2026",
+            "confidence": 0.92
+          }
+        ],
+        "lines": [
+          {
+            "medicineName": {
+              "value": "Metformin",
+              "confidence": 0.96
+            },
+            "strength": {
+              "value": "500 mg",
+              "confidence": 0.95
+            },
+            "form": "Tablet",
+            "dosageText": {
+              "value": "1-0-1 (twice daily)",
+              "confidence": 0.93
+            },
+            "durationDays": {
+              "value": 30,
+              "confidence": 0.92
+            },
+            "quantityUnits": {
+              "value": null,
+              "confidence": 0
+            }
+          },
+          {
+            "medicineName": {
+              "value": "Levothyroxine",
+              "confidence": 0.94
+            },
+            "strength": {
+              "value": "50 mcg",
+              "confidence": 0.93
+            },
+            "form": "Tablet",
+            "dosageText": {
+              "value": null,
+              "confidence": 0
+            },
+            "durationDays": {
+              "value": null,
+              "confidence": 0
+            },
+            "quantityUnits": {
+              "value": null,
+              "confidence": 0
+            }
+          }
+        ]
+      }
+    },
+    {
+      "file": "rx-rina-sen.png",
+      "description": "Readable printed prescription: telmisartan once daily for 30 days.",
+      "sha256": "f14facf123ee0a56fe4064190bb270fdd295479a7941246095673e9eb7ef2ae4",
+      "transcription": {
+        "pageConfidence": 0.94,
+        "fields": [
+          {
+            "key": "patient_name",
+            "value": "Rina Sen",
+            "confidence": 0.96
+          },
+          {
+            "key": "prescriber_name",
+            "value": "Dr. Moumita Chatterjee",
+            "confidence": 0.93
+          },
+          {
+            "key": "prescriber_reg_no",
+            "value": "WBMC-DEMO-2210",
+            "confidence": 0.91
+          },
+          {
+            "key": "prescriber_address",
+            "value": "4 Sample Road, Behala, Kolkata",
+            "confidence": 0.89
+          },
+          {
+            "key": "prescription_date",
+            "value": "20/10/2026",
+            "confidence": 0.93
+          }
+        ],
+        "lines": [
+          {
+            "medicineName": {
+              "value": "Telmisartan",
+              "confidence": 0.95
+            },
+            "strength": {
+              "value": "40 mg",
+              "confidence": 0.95
+            },
+            "form": "Tablet",
+            "dosageText": {
+              "value": "1-0-0 (once daily)",
+              "confidence": 0.94
+            },
+            "durationDays": {
+              "value": 30,
+              "confidence": 0.93
+            },
+            "quantityUnits": {
+              "value": null,
+              "confidence": 0
+            }
+          }
+        ]
+      }
+    },
+    {
+      "file": "rx-arif-mondal-blurred.png",
+      "description": "Blurred handwritten-style photo: strength illegible. Must trigger a re-upload request.",
+      "sha256": "6ce2565443281524fdc248ae468d445f44a1f136fb946e8288a33fb2575a8336",
+      "transcription": {
+        "pageConfidence": 0.38,
+        "fields": [
+          {
+            "key": "patient_name",
+            "value": "Arif Mondal",
+            "confidence": 0.52
+          },
+          {
+            "key": "prescriber_name",
+            "value": null,
+            "confidence": 0
+          }
+        ],
+        "lines": [
+          {
+            "medicineName": {
+              "value": "Levothyrox",
+              "confidence": 0.41
+            },
+            "strength": {
+              "value": null,
+              "confidence": 0
+            },
+            "form": "Tablet",
+            "dosageText": {
+              "value": null,
+              "confidence": 0
+            },
+            "durationDays": {
+              "value": null,
+              "confidence": 0
+            },
+            "quantityUnits": {
+              "value": null,
+              "confidence": 0
+            }
+          }
+        ]
+      }
+    },
+    {
+      "file": "rx-debasish-ghosh.png",
+      "description": "Readable printed prescription: telmisartan and amlodipine with written dosage.",
+      "sha256": "03b3cc198a67e68ac273200f7dd60b4d4617674a8f6b549024ec31c5b4e2154b",
+      "transcription": {
+        "pageConfidence": 0.93,
+        "fields": [
+          {
+            "key": "patient_name",
+            "value": "Debasish Ghosh",
+            "confidence": 0.95
+          },
+          {
+            "key": "prescriber_name",
+            "value": "Dr. Arindam Banerjee",
+            "confidence": 0.94
+          },
+          {
+            "key": "prescriber_reg_no",
+            "value": "WBMC-DEMO-1042",
+            "confidence": 0.9
+          },
+          {
+            "key": "prescriber_address",
+            "value": "12 Demo Lane, Sector II, Salt Lake, Kolkata",
+            "confidence": 0.88
+          },
+          {
+            "key": "prescription_date",
+            "value": "01/09/2026",
+            "confidence": 0.92
+          }
+        ],
+        "lines": [
+          {
+            "medicineName": {
+              "value": "Telmisartan",
+              "confidence": 0.95
+            },
+            "strength": {
+              "value": "40 mg",
+              "confidence": 0.94
+            },
+            "form": "Tablet",
+            "dosageText": {
+              "value": "1-0-0 (once daily)",
+              "confidence": 0.93
+            },
+            "durationDays": {
+              "value": 30,
+              "confidence": 0.92
+            },
+            "quantityUnits": {
+              "value": null,
+              "confidence": 0
+            }
+          },
+          {
+            "medicineName": {
+              "value": "Amlodipine",
+              "confidence": 0.94
+            },
+            "strength": {
+              "value": "5 mg",
+              "confidence": 0.93
+            },
+            "form": "Tablet",
+            "dosageText": {
+              "value": "0-0-1",
+              "confidence": 0.92
+            },
+            "durationDays": {
+              "value": 30,
+              "confidence": 0.92
+            },
+            "quantityUnits": {
+              "value": null,
+              "confidence": 0
+            }
+          }
+        ]
+      }
+    },
+    {
+      "file": "rx-priya-das-h1.png",
+      "description": "Readable printed prescription for the fictional Schedule H1 demo item (exercises the H1 register).",
+      "sha256": "5fa70ce43206e7c70eac1e40b552ab61e2ab44492cee9f2a5900d069b51e31d5",
+      "transcription": {
+        "pageConfidence": 0.94,
+        "fields": [
+          {
+            "key": "patient_name",
+            "value": "Priya Das",
+            "confidence": 0.96
+          },
+          {
+            "key": "prescriber_name",
+            "value": "Dr. Kaushik Mitra",
+            "confidence": 0.93
+          },
+          {
+            "key": "prescriber_reg_no",
+            "value": "WBMC-DEMO-4419",
+            "confidence": 0.9
+          },
+          {
+            "key": "prescriber_address",
+            "value": "27 Placeholder Avenue, Gariahat, Kolkata",
+            "confidence": 0.88
+          },
+          {
+            "key": "prescription_date",
+            "value": "28/10/2026",
+            "confidence": 0.93
+          }
+        ],
+        "lines": [
+          {
+            "medicineName": {
+              "value": "Cefdinova",
+              "confidence": 0.94
+            },
+            "strength": {
+              "value": "300 mg",
+              "confidence": 0.95
+            },
+            "form": "Capsule",
+            "dosageText": {
+              "value": "1-0-1 (twice daily)",
+              "confidence": 0.93
+            },
+            "durationDays": {
+              "value": 5,
+              "confidence": 0.92
+            },
+            "quantityUnits": {
+              "value": null,
+              "confidence": 0
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
