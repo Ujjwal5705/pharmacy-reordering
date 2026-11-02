@@ -8,6 +8,8 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // Lets the browser tests run their own server without clashing with a running dev server.
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   poweredByHeader: false,
   // tesseract.js spawns worker threads and reads its WASM core from node_modules,
   // so it must not be bundled into the server build.

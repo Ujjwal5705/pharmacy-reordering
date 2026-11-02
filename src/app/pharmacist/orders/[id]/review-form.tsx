@@ -207,7 +207,7 @@ export function ReviewForm(props: {
                         role="radio"
                         aria-checked={s.decision === v}
                         disabled={disabled}
-                        title={disabled ? "No equivalent product in the catalogue" : undefined}
+                        title={disabled ? "No equivalent generic in the catalogue" : undefined}
                         onClick={() => update(i.id, { decision: v })}
                         className={cn("inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border-2 px-3 font-semibold disabled:cursor-not-allowed disabled:opacity-40", s.decision === v ? activeCls : "border-line text-ink-soft hover:border-line-strong")}
                       >
@@ -220,9 +220,9 @@ export function ReviewForm(props: {
                 {s.decision === "APPROVE" || s.decision === "PROPOSE_SUBSTITUTE" ? (
                   <div className="grid gap-4 sm:grid-cols-3">
                     {s.decision === "PROPOSE_SUBSTITUTE" ? (
-                      <Field label="Equivalent product" htmlFor={`sub-${i.id}`} hint="Customer must consent before it is supplied." className="sm:col-span-3">
+                      <Field label="Equivalent generic" htmlFor={`sub-${i.id}`} hint="Same medicine, strength and form. The customer must consent before it is supplied." className="sm:col-span-3">
                         <Select id={`sub-${i.id}`} value={s.substituteProductId} onChange={(e) => update(i.id, { substituteProductId: e.target.value })}>
-                          <option value="">Choose an equivalent</option>
+                          <option value="">Choose a generic equivalent</option>
                           {i.alternatives.map((a) => (
                             <option key={a.id} value={a.id} disabled={a.available !== null && a.available < Number(s.approvedQuantity)}>
                               {a.label}

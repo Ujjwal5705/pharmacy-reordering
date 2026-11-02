@@ -195,6 +195,13 @@ describe("6. Generic substitution needs pharmacist approval and customer consent
     await expect(respondToSubstitution(w.actors.pharmacist, proposal.id, true)).rejects.toMatchObject({ code: "FORBIDDEN" });
   });
 
+  it("rejects a brand as the 'generic' alternative", async () => {
+    const { orderId } = await placeOrder(w.products.metformin.id, 1);
+    const err = await submitReview(w.actors.pharmacist, orderId, { outcome: "DECIDE", header, items: [{ orderItemId: (await itemOf(orderId)).id, decision: "PROPOSE_SUBSTITUTE", substituteProductId: w.products.metforminBrand.id }] }).catch((e) => e);
+    expect(err.code).toBe("VALIDATION");
+    expect(err.details.join()).toMatch(/generic/);
+  });
+
   it("rejects a non-equivalent alternative", async () => {
     const { orderId } = await placeOrder(w.products.metforminBrand.id, 1);
     const err = await submitReview(w.actors.pharmacist, orderId, { outcome: "DECIDE", header, items: [{ orderItemId: (await itemOf(orderId)).id, decision: "PROPOSE_SUBSTITUTE", substituteProductId: w.products.telmisartan.id }] }).catch((e) => e);

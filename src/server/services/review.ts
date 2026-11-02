@@ -133,8 +133,8 @@ export async function submitReview(actor: Actor | null, orderId: string, raw: Re
       if (item.h1RegisterRequired && !d.h1) errors.push(`${name}: complete the H1 register details.`);
       if (d.decision === "PROPOSE_SUBSTITUTE") {
         const sub = d.substituteProductId ? await tx.product.findUnique({ where: { id: d.substituteProductId } }) : null;
-        if (!sub || sub.id === item.productId || !sub.active || !item.product.genericGroup || sub.genericGroup !== item.product.genericGroup) {
-          errors.push(`${name}: choose an equivalent product (same medicine, strength and form) as the alternative.`);
+        if (!sub || sub.id === item.productId || !sub.active || !sub.isGeneric || !item.product.genericGroup || sub.genericGroup !== item.product.genericGroup) {
+          errors.push(`${name}: choose an equivalent generic product (same medicine, strength and form) as the alternative.`);
         } else if (!evaluateCategory(rules, sub.category).orderable || sub.category !== item.category) {
           errors.push(`${name}: the alternative cannot be supplied online.`);
         }

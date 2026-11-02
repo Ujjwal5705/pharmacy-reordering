@@ -72,8 +72,8 @@ export default async function ReviewPage({ params }: { params: Promise<{ id: str
           }
         : null,
       alternatives: alternatives
-        .filter((a) => a.genericGroup && a.genericGroup === i.product.genericGroup && a.id !== i.productId && a.orderable)
-        .map((a) => ({ id: a.id, label: `${a.name} — ${money(a.pricePaise)}${a.isGeneric ? " (generic)" : ""}${a.available !== null ? ` · ${a.available} in stock at store` : ""}`, available: a.available })),
+        .filter((a) => a.genericGroup && a.genericGroup === i.product.genericGroup && a.id !== i.productId && a.orderable && a.isGeneric)
+        .map((a) => ({ id: a.id, label: `${a.name} (generic) — ${money(a.pricePaise)}${a.available !== null ? ` · ${a.available} in stock at store` : ""}`, available: a.available })),
     };
   });
 

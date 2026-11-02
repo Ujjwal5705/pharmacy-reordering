@@ -113,9 +113,19 @@ export function RefillToCartButton({ planId, label }: { planId: string; label: s
   );
 }
 
-export function RefillOptIn({ planId, optedIn, channel }: { planId: string; optedIn: boolean; channel: Channel }) {
+export function RefillOptIn({ planId, optedIn: saved, channel }: { planId: string; optedIn: boolean; channel: Channel }) {
   const { pending, run } = useRun();
   const [ch, setCh] = useState<Channel>(channel);
+  // Optimistic: reflect the tap immediately, roll back if the server refuses.
+  const [optedIn, setOptedIn] = useState(saved);
+  const toggle = (next: boolean) => {
+    setOptedIn(next);
+    run(async () => {
+      const r = await refillOptInAction(planId, next, ch);
+      if (!r.ok) setOptedIn(!next);
+      return r;
+    });
+  };
   return (
     <div className="flex flex-wrap items-center gap-2">
       <label className="inline-flex min-h-11 cursor-pointer items-center gap-2 text-[15px] font-medium">
@@ -124,7 +134,7 @@ export function RefillOptIn({ planId, optedIn, channel }: { planId: string; opte
           className="size-5 accent-[var(--color-brand)]"
           checked={optedIn}
           disabled={pending}
-          onChange={(e) => run(() => refillOptInAction(planId, e.target.checked, ch))}
+          onChange={(e) => toggle(e.target.checked)}
         />
         Remind me before this runs out
       </label>
